@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Sobre",
+    "featured": "OXILIFE FISH",
+    "catalog": "Productos",
+    "services": "Servicios",
+    "demo": "Demostración",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "title1": "TECNOLOGÍA QUE",
+    "title2": "TRANSFORMA",
+    "title3": "SU PRODUCCIÓN",
+    "subtitle": "Soluciones inteligentes en automatización eléctrica para piscicultura, industrias y residencias. Conozca la sonda OXILIFE FISH y ahorre hasta un 40% en energía.",
+    "cta_whatsapp": "Contáctenos",
+    "cta_catalog": "Ver Productos"
+  },
+  "about": {
+    "title": "CONOZCA ELETROTECH",
+    "text1": "Iniciamos actividades en agosto de 2018, hoy completando 8 años. Inicialmente solo trabajábamos con rebobinado y mantenimiento de motores eléctricos y bombas de agua. Con el tiempo, nos perfeccionamos y abarcamos nuevas áreas como automatización y proyectos eléctricos industriales y para piscicultura.",
+    "text2": "Nos comprometemos con el plazo de entrega y valoramos un servicio con excelencia y calidad. Uno de nuestros principales diferenciales es la atención fuera de horario comercial, en horarios especiales incluyendo de madrugada.",
+    "highlight1": "Piscicultura",
+    "highlight2": "Industrias",
+    "highlight3": "Productores Rurales",
+    "highlight4": "Residencial",
+    "highlight5": "Atención 24h",
+    "highlight6": "Desde 2018"
+  },
+  "featured": {
+    "title": "SONDA DE OXÍGENO DISUELTO",
+    "description": "Sistema de monitoreo y control de oxígeno en tanques de peces. Separado en cuatro grupos de aireadores que se encienden y apagan independientemente según la necesidad y programación del productor. Acceso remoto por celular mediante aplicación.",
+    "f1": "Hasta 3 sondas en un panel",
+    "f2": "4 grupos de aireadores independientes",
+    "f3": "Alarmas de O₂ máximo y mínimo",
+    "f4": "Acceso remoto vía app",
+    "f5": "Lectura de temperatura integrada",
+    "f6": "Historial grabado en pendrive",
+    "f7": "Equipos de nivel industrial",
+    "f8": "Ahorro de hasta 40%",
+    "cta": "Solicitar Presupuesto"
+  },
+  "catalog": {
+    "title": "NUESTROS PRODUCTOS",
+    "subtitle": "Conozca nuestra línea completa de productos para automatización y piscicultura"
+  },
+  "services": {
+    "title": "NUESTROS SERVICIOS",
+    "subtitle": "Ofrecemos soluciones completas para su negocio"
+  },
+  "demo": {
+    "title": "VÉALO EN ACCIÓN",
+    "subtitle": "Vea demostraciones de nuestros productos y testimonios de productores",
+    "video1_title": "Demostración OXILIFE FISH",
+    "video_soon": "Video próximamente",
+    "video1_heading": "Cómo funciona la sonda",
+    "video1_desc": "Vea cómo la sonda OXILIFE FISH monitorea el oxígeno disuelto y activa automáticamente los aireadores para garantizar la salud de los peces.",
+    "video2_title": "Testimonio de Productor",
+    "video2_heading": "Resultados reales",
+    "video2_desc": "Vea el testimonio de un productor que utiliza nuestras soluciones y logró un ahorro de hasta 40% en la cuenta de energía eléctrica."
+  },
+  "efficiency": {
+    "title": "EFICIENCIA Y AHORRO",
+    "subtitle": "Números que demuestran la calidad de nuestras soluciones"
+  },
+  "faq": {
+    "title": "PREGUNTAS FRECUENTES",
+    "subtitle": "Encuentre respuestas a las principales preguntas sobre nuestros productos y servicios"
+  },
+  "modal": {
+    "cta": "Solicitar Presupuesto",
+    "close": "Cerrar"
+  },
+  "whatsapp": {
+    "tooltip": "Contáctenos por WhatsApp"
+  },
+  "footer": {
+    "brand_text": "Soluciones inteligentes en automatización eléctrica para piscicultura, industrias y residencias. Tecnología que transforma su producción.",
+    "nav_title": "NAVEGACIÓN",
+    "services_title": "SERVICIOS",
+    "contact_title": "CONTACTO",
+    "service1": "Automatización",
+    "service2": "Proyectos Eléctricos",
+    "service3": "Mantenimiento",
+    "service4": "Consultoría",
+    "location": "Oeste de Paraná, Brasil",
+    "rights": "Todos los derechos reservados.",
+    "dev": "Desarrollado con 💙 por Eletrotech"
+  }
+}

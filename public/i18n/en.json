@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "featured": "OXILIFE FISH",
+    "catalog": "Products",
+    "services": "Services",
+    "demo": "Demo",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "title1": "TECHNOLOGY THAT",
+    "title2": "TRANSFORMS",
+    "title3": "YOUR PRODUCTION",
+    "subtitle": "Smart electrical automation solutions for fish farming, industries, and residences. Discover the OXILIFE FISH probe and save up to 40% on energy.",
+    "cta_whatsapp": "Contact Us",
+    "cta_catalog": "View Products"
+  },
+  "about": {
+    "title": "ABOUT ELETROTECH",
+    "text1": "We started our activities in August 2018, now completing 8 years. Initially, we only worked with rewinding and maintenance of electric motors and water pumps. Over time, we improved and expanded into new areas such as automation and electrical projects in industrial and fish farming sectors.",
+    "text2": "We are committed to delivery deadlines and strive for excellence and quality in service. One of our main differentials is after-hours service, at special times including overnight.",
+    "highlight1": "Fish Farming",
+    "highlight2": "Industries",
+    "highlight3": "Rural Producers",
+    "highlight4": "Residential",
+    "highlight5": "24/7 Service",
+    "highlight6": "Since 2018"
+  },
+  "featured": {
+    "title": "DISSOLVED OXYGEN PROBE",
+    "description": "Oxygen monitoring and control system for fish tanks. Separated into four aerator groups that turn on and off independently according to the producer's needs and programming. Remote access via smartphone app.",
+    "f1": "Up to 3 probes on one panel",
+    "f2": "4 independent aerator groups",
+    "f3": "Max/min O₂ level alarms",
+    "f4": "Remote access via app",
+    "f5": "Integrated temperature reading",
+    "f6": "History saved to USB drive",
+    "f7": "Industrial-grade equipment",
+    "f8": "Up to 40% savings",
+    "cta": "Request a Quote"
+  },
+  "catalog": {
+    "title": "OUR PRODUCTS",
+    "subtitle": "Discover our complete line of automation and fish farming products"
+  },
+  "services": {
+    "title": "OUR SERVICES",
+    "subtitle": "We offer complete solutions for your business"
+  },
+  "demo": {
+    "title": "SEE IT IN ACTION",
+    "subtitle": "Watch demonstrations of our products and producer testimonials",
+    "video1_title": "OXILIFE FISH Demo",
+    "video_soon": "Video coming soon",
+    "video1_heading": "How the probe works",
+    "video1_desc": "See how the OXILIFE FISH probe monitors dissolved oxygen and automatically activates aerators to ensure fish health.",
+    "video2_title": "Producer Testimonial",
+    "video2_heading": "Real results",
+    "video2_desc": "Watch a producer's testimonial who uses our solutions and achieved up to 40% savings on electricity bills."
+  },
+  "efficiency": {
+    "title": "EFFICIENCY & SAVINGS",
+    "subtitle": "Numbers that demonstrate the quality of our solutions"
+  },
+  "faq": {
+    "title": "FREQUENTLY ASKED QUESTIONS",
+    "subtitle": "Find answers to the main questions about our products and services"
+  },
+  "modal": {
+    "cta": "Request a Quote",
+    "close": "Close"
+  },
+  "whatsapp": {
+    "tooltip": "Contact us on WhatsApp"
+  },
+  "footer": {
+    "brand_text": "Smart electrical automation solutions for fish farming, industries, and residences. Technology that transforms your production.",
+    "nav_title": "NAVIGATION",
+    "services_title": "SERVICES",
+    "contact_title": "CONTACT",
+    "service1": "Automation",
+    "service2": "Electrical Projects",
+    "service3": "Maintenance",
+    "service4": "Consulting",
+    "location": "Western Paraná, Brazil",
+    "rights": "All rights reserved.",
+    "dev": "Developed with 💙 by Eletrotech"
+  }
+}

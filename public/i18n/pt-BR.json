@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Início",
+    "about": "Sobre",
+    "featured": "OXILIFE FISH",
+    "catalog": "Produtos",
+    "services": "Serviços",
+    "demo": "Demonstração",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "title1": "TECNOLOGIA QUE",
+    "title2": "TRANSFORMA",
+    "title3": "SUA PRODUÇÃO",
+    "subtitle": "Soluções inteligentes em automação elétrica para piscicultura, indústrias e residências. Conheça a sonda OXILIFE FISH e economize até 40% em energia.",
+    "cta_whatsapp": "Fale Conosco",
+    "cta_catalog": "Ver Produtos"
+  },
+  "about": {
+    "title": "CONHEÇA A ELETROTECH",
+    "text1": "Iniciamos as atividades em agosto de 2018, hoje completando 8 anos. Inicialmente trabalhávamos apenas com rebobinagem e manutenção de motores elétricos e bombas d'água. Com o passar do tempo, nos aperfeiçoamos e abrangemos novas áreas como automação e projetos elétricos na área industrial e piscicultura.",
+    "text2": "Nos comprometemos com prazo de entrega e prezamos por um serviço com excelência e qualidade. Um dos nossos principais diferenciais são os atendimentos fora de horário comercial, em horários especiais incluindo de madrugada.",
+    "highlight1": "Piscicultura",
+    "highlight2": "Indústrias",
+    "highlight3": "Produtores Rurais",
+    "highlight4": "Residencial",
+    "highlight5": "Atendimento 24h",
+    "highlight6": "Desde 2018"
+  },
+  "featured": {
+    "title": "SONDA DE OXIGÊNIO DISSOLVIDO",
+    "description": "Sistema de monitoramento e controle do oxigênio no tanque de peixe. Separado em quatro grupos de aeradores que ligam e desligam separadamente de acordo com a necessidade e programação do produtor. Acesso remoto pelo celular através de aplicativo.",
+    "f1": "Até 3 sondas no mesmo painel",
+    "f2": "4 grupos de aeradores independentes",
+    "f3": "Alarmes de O₂ máximo e mínimo",
+    "f4": "Acesso remoto via aplicativo",
+    "f5": "Leitura de temperatura integrada",
+    "f6": "Histórico gravado em pendrive",
+    "f7": "Equipamentos de nível industrial",
+    "f8": "Economia de até 40%",
+    "cta": "Solicitar Orçamento"
+  },
+  "catalog": {
+    "title": "NOSSOS PRODUTOS",
+    "subtitle": "Conheça nossa linha completa de produtos para automação e piscicultura"
+  },
+  "services": {
+    "title": "NOSSOS SERVIÇOS",
+    "subtitle": "Oferecemos soluções completas para o seu negócio"
+  },
+  "demo": {
+    "title": "VEJA EM AÇÃO",
+    "subtitle": "Confira demonstrações dos nossos produtos e depoimentos de produtores",
+    "video1_title": "Demonstração OXILIFE FISH",
+    "video_soon": "Vídeo em breve",
+    "video1_heading": "Como funciona a sonda",
+    "video1_desc": "Veja como a sonda OXILIFE FISH monitora o oxigênio dissolvido e aciona automaticamente os aeradores para garantir a saúde dos peixes.",
+    "video2_title": "Depoimento de Produtor",
+    "video2_heading": "Resultados reais",
+    "video2_desc": "Confira o depoimento de um produtor que utiliza nossas soluções e alcançou economia de até 40% na conta de energia elétrica."
+  },
+  "efficiency": {
+    "title": "EFICIÊNCIA E ECONOMIA",
+    "subtitle": "Números que demonstram a qualidade das nossas soluções"
+  },
+  "faq": {
+    "title": "PERGUNTAS FREQUENTES",
+    "subtitle": "Encontre respostas para as principais dúvidas sobre nossos produtos e serviços"
+  },
+  "modal": {
+    "cta": "Solicitar Orçamento",
+    "close": "Fechar"
+  },
+  "whatsapp": {
+    "tooltip": "Fale conosco pelo WhatsApp"
+  },
+  "footer": {
+    "brand_text": "Soluções inteligentes em automação elétrica para piscicultura, indústrias e residências. Tecnologia que transforma sua produção.",
+    "nav_title": "NAVEGAÇÃO",
+    "services_title": "SERVIÇOS",
+    "contact_title": "CONTATO",
+    "service1": "Automação",
+    "service2": "Projetos Elétricos",
+    "service3": "Manutenção",
+    "service4": "Consultoria",
+    "location": "Oeste do Paraná",
+    "rights": "Todos os direitos reservados.",
+    "dev": "Desenvolvido com 💙 por Eletrotech"
+  }
+}

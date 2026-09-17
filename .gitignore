@@ -1,0 +1,29 @@
+# Dependências
+node_modules/
+
+# Arquivos brutos recebidos (fotos HEIC, CorelDraw, vídeos mp4 brutos, docx)
+recebido/
+
+# Uploads gerados pelo servidor
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs e variáveis de ambiente
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.*.local
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Relatórios e artefatos de testes
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

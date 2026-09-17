@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Eletrotech — Painel Administrativo</title>
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <!-- LOGIN -->
+  <div class="admin-login" id="admin-login">
+    <div class="login-card">
+      <div class="login-header">
+        <h1>ELETRO<span class="accent">TECH</span></h1>
+        <p>Painel Administrativo</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Usuário</label>
+          <input type="text" id="login-username" placeholder="admin" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" placeholder="••••••" required>
+        </div>
+        <button type="submit" class="btn-admin-primary" id="login-btn">Entrar</button>
+        <p class="login-error" id="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="admin-dashboard" id="admin-dashboard" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-header">
+        <h2>ELETRO<span class="accent">TECH</span></h2>
+        <p>Admin</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-section="products">📦 Produtos</a>
+        <a href="#" class="sidebar-link" data-section="faq">❓ FAQ</a>
+        <a href="#" class="sidebar-link" data-section="services">🔧 Serviços</a>
+        <a href="#" class="sidebar-link" data-section="settings">⚙️ Configurações</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="/" class="sidebar-link">🌐 Ver Site</a>
+        <button class="sidebar-link" id="logout-btn">🚪 Sair</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-header">
+        <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle">☰</button>
+        <h3 id="admin-page-title">Produtos</h3>
+        <span id="admin-user-name"></span>
+      </header>
+
+      <!-- Products Section -->
+      <section class="admin-section" id="section-products">
+        <div class="admin-toolbar">
+          <h4>Gerenciar Produtos</h4>
+          <button class="btn-admin-primary" id="btn-add-product">+ Novo Produto</button>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table" id="products-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Destaque</th>
+                <th>Desconto</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="admin-section" id="section-faq" style="display: none;">
+        <div class="admin-toolbar">
+          <h4>Gerenciar FAQ</h4>
+          <button class="btn-admin-primary" id="btn-add-faq">+ Nova Pergunta</button>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table" id="faq-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Pergunta (PT)</th>
+                <th>Ordem</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="faq-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Services Section -->
+      <section class="admin-section" id="section-services" style="display: none;">
+        <div class="admin-toolbar">
+          <h4>Gerenciar Serviços</h4>
+          <button class="btn-admin-primary" id="btn-add-service">+ Novo Serviço</button>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table" id="services-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Título (PT)</th>
+                <th>Ícone</th>
+                <th>Ordem</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="services-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="admin-section" id="section-settings" style="display: none;">
+        <div class="admin-toolbar">
+          <h4>Configurações</h4>
+        </div>
+        <div class="settings-card">
+          <h5>Alterar Senha</h5>
+          <form id="change-password-form">
+            <div class="form-group">
+              <label for="current-password">Senha Atual</label>
+              <input type="password" id="current-password" required>
+            </div>
+            <div class="form-group">
+              <label for="new-password">Nova Senha</label>
+              <input type="password" id="new-password" required minlength="6">
+            </div>
+            <div class="form-group">
+              <label for="confirm-password">Confirmar Nova Senha</label>
+              <input type="password" id="confirm-password" required minlength="6">
+            </div>
+            <button type="submit" class="btn-admin-primary">Alterar Senha</button>
+            <p class="form-message" id="password-message"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Form Modal -->
+  <div class="admin-modal-overlay" id="product-form-modal">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <h3 id="product-form-title">Novo Produto</h3>
+        <button class="admin-modal-close" id="product-form-close">&times;</button>
+      </div>
+      <form id="product-form" enctype="multipart/form-data">
+        <input type="hidden" id="product-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="product-category">Categoria</label>
+            <select id="product-category"></select>
+          </div>
+          <div class="form-group">
+            <label for="product-sort">Ordem</label>
+            <input type="number" id="product-sort" value="0">
+          </div>
+          <div class="form-group full-width">
+            <label for="product-name-pt">Nome (PT)</label>
+            <input type="text" id="product-name-pt" required>
+          </div>
+          <div class="form-group">
+            <label for="product-name-en">Nome (EN)</label>
+            <input type="text" id="product-name-en">
+          </div>
+          <div class="form-group">
+            <label for="product-name-es">Nome (ES)</label>
+            <input type="text" id="product-name-es">
+          </div>
+          <div class="form-group full-width">
+            <label for="product-desc-pt">Descrição (PT)</label>
+            <textarea id="product-desc-pt" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="product-desc-en">Descrição (EN)</label>
+            <textarea id="product-desc-en" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="product-desc-es">Descrição (ES)</label>
+            <textarea id="product-desc-es" rows="3"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="product-features-pt">Características (PT) — separar por ;</label>
+            <textarea id="product-features-pt" rows="2" placeholder="Feature 1;Feature 2;Feature 3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="product-features-en">Características (EN)</label>
+            <textarea id="product-features-en" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="product-features-es">Características (ES)</label>
+            <textarea id="product-features-es" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="product-image">Imagem</label>
+            <input type="file" id="product-image" accept="image/*">
+            <img id="product-image-preview" class="image-preview" style="display:none;">
+          </div>
+          <div class="form-group">
+            <label for="product-discount">Desconto (%)</label>
+            <input type="number" id="product-discount" value="0" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="product-featured">
+              <input type="checkbox" id="product-featured"> Produto em destaque
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="product-active">
+              <input type="checkbox" id="product-active" checked> Ativo
+            </label>
+          </div>
+          <div class="form-group full-width">
+            <label for="product-whatsapp-pt">Mensagem WhatsApp (PT)</label>
+            <input type="text" id="product-whatsapp-pt">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-admin-secondary" id="product-form-cancel">Cancelar</button>
+          <button type="submit" class="btn-admin-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FAQ Form Modal -->
+  <div class="admin-modal-overlay" id="faq-form-modal">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <h3 id="faq-form-title">Nova Pergunta</h3>
+        <button class="admin-modal-close" id="faq-form-close">&times;</button>
+      </div>
+      <form id="faq-form">
+        <input type="hidden" id="faq-id">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="faq-question-pt">Pergunta (PT)</label>
+            <input type="text" id="faq-question-pt" required>
+          </div>
+          <div class="form-group">
+            <label for="faq-question-en">Pergunta (EN)</label>
+            <input type="text" id="faq-question-en">
+          </div>
+          <div class="form-group">
+            <label for="faq-question-es">Pergunta (ES)</label>
+            <input type="text" id="faq-question-es">
+          </div>
+          <div class="form-group full-width">
+            <label for="faq-answer-pt">Resposta (PT)</label>
+            <textarea id="faq-answer-pt" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="faq-answer-en">Resposta (EN)</label>
+            <textarea id="faq-answer-en" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="faq-answer-es">Resposta (ES)</label>
+            <textarea id="faq-answer-es" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="faq-sort">Ordem</label>
+            <input type="number" id="faq-sort" value="0">
+          </div>
+          <div class="form-group">
+            <label for="faq-active">
+              <input type="checkbox" id="faq-active" checked> Ativa
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-admin-secondary" id="faq-form-cancel">Cancelar</button>
+          <button type="submit" class="btn-admin-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Service Form Modal -->
+  <div class="admin-modal-overlay" id="service-form-modal">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <h3 id="service-form-title">Novo Serviço</h3>
+        <button class="admin-modal-close" id="service-form-close">&times;</button>
+      </div>
+      <form id="service-form">
+        <input type="hidden" id="service-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="service-icon">Ícone (emoji)</label>
+            <input type="text" id="service-icon" placeholder="⚡" maxlength="4">
+          </div>
+          <div class="form-group">
+            <label for="service-sort">Ordem</label>
+            <input type="number" id="service-sort" value="0">
+          </div>
+          <div class="form-group full-width">
+            <label for="service-title-pt">Título (PT)</label>
+            <input type="text" id="service-title-pt" required>
+          </div>
+          <div class="form-group">
+            <label for="service-title-en">Título (EN)</label>
+            <input type="text" id="service-title-en">
+          </div>
+          <div class="form-group">
+            <label for="service-title-es">Título (ES)</label>
+            <input type="text" id="service-title-es">
+          </div>
+          <div class="form-group full-width">
+            <label for="service-desc-pt">Descrição (PT)</label>
+            <textarea id="service-desc-pt" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="service-desc-en">Descrição (EN)</label>
+            <textarea id="service-desc-en" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="service-desc-es">Descrição (ES)</label>
+            <textarea id="service-desc-es" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="service-active">
+              <input type="checkbox" id="service-active" checked> Ativo
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-admin-secondary" id="service-form-cancel">Cancelar</button>
+          <button type="submit" class="btn-admin-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
