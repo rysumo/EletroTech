@@ -56,6 +56,14 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     }
   });
 
+  test('deve renderizar a seção de demonstração técnica com banner de agendamento', async ({ page }) => {
+    const demoSection = page.locator('#demo');
+    await expect(demoSection).toBeVisible();
+    const demoCta = page.locator('#demo-whatsapp-cta');
+    await expect(demoCta).toBeVisible();
+    await expect(demoCta).toHaveAttribute('href', /wa\.me/);
+  });
+
   test('deve expandir e recolher perguntas no FAQ', async ({ page }) => {
     const faqItem = page.locator('.faq-item').first();
     if (await faqItem.count() > 0) {

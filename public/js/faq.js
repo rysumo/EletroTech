@@ -36,7 +36,7 @@ const FAQ = (() => {
       const answer = item[`answer${suffix}`] || item.answer_pt;
 
       return `
-        <div class="accordion-item reveal" data-index="${index}">
+        <div class="accordion-item faq-item reveal" data-index="${index}">
           <button class="accordion-trigger" aria-expanded="false" id="faq-trigger-${index}">
             <span>${question}</span>
             <span class="accordion-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>

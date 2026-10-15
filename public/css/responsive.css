@@ -111,6 +111,28 @@
     grid-template-columns: 1fr;
   }
 
+  .demo-cta-card {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--space-xl);
+    gap: var(--space-lg);
+  }
+
+  .demo-cta-content {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-md);
+  }
+
+  .demo-cta-action {
+    width: 100%;
+  }
+
+  .demo-cta-action .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
 
   /* Footer */
   .footer-grid {
