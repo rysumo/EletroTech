@@ -20,17 +20,52 @@ function resultToObjects(result) {
 // CATEGORIES
 // ============================
 
+const DEFAULT_CATEGORIES = [
+  { id: 1, name_pt: 'Sondas e Monitoramento', name_en: 'Probes & Monitoring', name_es: 'Sondas y Monitoreo', slug: 'sondas', icon: '📡', sort_order: 1, is_active: 1 },
+  { id: 2, name_pt: 'Painéis e Automação', name_en: 'Panels & Automation', name_es: 'Paneles y Automatización', slug: 'automacao', icon: '⚡', sort_order: 2, is_active: 1 },
+  { id: 3, name_pt: 'Motores e Bombas', name_en: 'Motors & Pumps', name_es: 'Motores y Bombas', slug: 'motores', icon: '🔄', sort_order: 3, is_active: 1 },
+  { id: 4, name_pt: 'Material Elétrico', name_en: 'Electrical Supplies', name_es: 'Material Eléctrico', slug: 'material-eletrico', icon: '🔌', sort_order: 4, is_active: 1 },
+  { id: 5, name_pt: 'Linha Residencial', name_en: 'Residential Line', name_es: 'Línea Residencial', slug: 'residencial', icon: '🏠', sort_order: 5, is_active: 1 },
+  { id: 6, name_pt: 'Alarmes e Segurança', name_en: 'Alarms & Security', name_es: 'Alarmas y Seguridad', slug: 'alarmes', icon: '🔔', sort_order: 6, is_active: 1 },
+];
+
 // GET /api/categories — active only (public, used for catalog filter tabs)
 router.get('/categories', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      if (!error && data) return res.json(data);
+      // Fallback 1: If is_active column does not exist in Supabase schema
+      if (error) {
+        const retry = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (!retry.error && retry.data) {
+          data = retry.data;
+          error = null;
+        }
+      }
+
+      // Fallback 2: If sort_order also fails, select all
+      if (error) {
+        const retry2 = await supabase
+          .from('categories')
+          .select('*');
+        if (!retry2.error && retry2.data) {
+          data = retry2.data;
+          error = null;
+        }
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const filtered = data.filter(c => c.is_active !== false && c.is_active !== 0 && c.is_active !== '0');
+        return res.json(filtered.length > 0 ? filtered : data);
+      }
     } catch (err) {
       console.warn('Supabase categories fetch failed, falling back to SQLite:', err.message);
     }
@@ -39,23 +74,35 @@ router.get('/categories', async (req, res) => {
   try {
     const db = await getDb();
     const result = db.exec("SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC");
-    res.json(resultToObjects(result));
+    const rows = resultToObjects(result);
+    if (rows && rows.length > 0) return res.json(rows);
   } catch (err) {
-    console.error('Error fetching categories:', err);
-    res.status(500).json({ error: 'Erro ao buscar categorias' });
+    console.warn('SQLite categories fallback error (e.g. serverless without wasm):', err.message);
   }
+
+  res.json(DEFAULT_CATEGORIES);
 });
 
 // GET /api/categories/all — including inactive (admin)
 router.get('/categories/all', authMiddleware, async (req, res) => {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('categories')
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (!error && data) return res.json(data);
+      if (error) {
+        const retry = await supabase.from('categories').select('*');
+        if (!retry.error && retry.data) {
+          data = retry.data;
+          error = null;
+        }
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return res.json(data);
+      }
     } catch (err) {
       console.warn('Supabase all categories fetch failed, falling back to SQLite:', err.message);
     }
@@ -64,11 +111,13 @@ router.get('/categories/all', authMiddleware, async (req, res) => {
   try {
     const db = await getDb();
     const result = db.exec("SELECT * FROM categories ORDER BY sort_order ASC");
-    res.json(resultToObjects(result));
+    const rows = resultToObjects(result);
+    if (rows && rows.length > 0) return res.json(rows);
   } catch (err) {
-    console.error('Error fetching all categories:', err);
-    res.status(500).json({ error: 'Erro ao buscar categorias' });
+    console.warn('SQLite all categories fallback error:', err.message);
   }
+
+  res.json(DEFAULT_CATEGORIES);
 });
 
 // POST /api/categories — admin
@@ -581,17 +630,46 @@ router.delete('/faq/:id', authMiddleware, async (req, res) => {
 // EFFICIENCY STATS
 // ============================
 
+const DEFAULT_STATS = [
+  { id: 1, label_pt: 'Economia de Energia', label_en: 'Energy Savings', label_es: 'Ahorro de Energía', value: '40', suffix: '%', icon: '⚡', sort_order: 1, is_active: 1 },
+  { id: 2, label_pt: 'Redução na Mortalidade', label_en: 'Mortality Reduction', label_es: 'Reducción de Mortalidad', value: '90', suffix: '%', icon: '🐟', sort_order: 2, is_active: 1 },
+  { id: 3, label_pt: 'Clientes Atendidos', label_en: 'Clients Served', label_es: 'Clientes Atendidos', value: '200', suffix: '+', icon: '👥', sort_order: 3, is_active: 1 },
+  { id: 4, label_pt: 'Anos de Experiência', label_en: 'Years of Experience', label_es: 'Años de Experiencia', value: '8', suffix: '+', icon: '🏆', sort_order: 4, is_active: 1 },
+];
+
 // GET /api/stats — public (active only)
 router.get('/stats', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('efficiency_stats')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      if (!error && data) return res.json(data);
+      if (error) {
+        const retry = await supabase
+          .from('efficiency_stats')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (!retry.error && retry.data) {
+          data = retry.data;
+          error = null;
+        }
+      }
+
+      if (error) {
+        const retry2 = await supabase.from('efficiency_stats').select('*');
+        if (!retry2.error && retry2.data) {
+          data = retry2.data;
+          error = null;
+        }
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const filtered = data.filter(s => s.is_active !== false && s.is_active !== 0 && s.is_active !== '0');
+        return res.json(filtered.length > 0 ? filtered : data);
+      }
     } catch (err) {
       console.warn('Supabase stats fetch failed, falling back to SQLite:', err.message);
     }
@@ -600,23 +678,35 @@ router.get('/stats', async (req, res) => {
   try {
     const db = await getDb();
     const result = db.exec("SELECT * FROM efficiency_stats WHERE is_active = 1 ORDER BY sort_order ASC");
-    res.json(resultToObjects(result));
+    const rows = resultToObjects(result);
+    if (rows && rows.length > 0) return res.json(rows);
   } catch (err) {
-    console.error('Error fetching stats:', err);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    console.warn('SQLite stats fallback error:', err.message);
   }
+
+  res.json(DEFAULT_STATS);
 });
 
 // GET /api/stats/all — admin
 router.get('/stats/all', authMiddleware, async (req, res) => {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('efficiency_stats')
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (!error && data) return res.json(data);
+      if (error) {
+        const retry = await supabase.from('efficiency_stats').select('*');
+        if (!retry.error && retry.data) {
+          data = retry.data;
+          error = null;
+        }
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return res.json(data);
+      }
     } catch (err) {
       console.warn('Supabase all stats fetch failed, falling back to SQLite:', err.message);
     }
@@ -625,11 +715,13 @@ router.get('/stats/all', authMiddleware, async (req, res) => {
   try {
     const db = await getDb();
     const result = db.exec("SELECT * FROM efficiency_stats ORDER BY sort_order ASC");
-    res.json(resultToObjects(result));
+    const rows = resultToObjects(result);
+    if (rows && rows.length > 0) return res.json(rows);
   } catch (err) {
-    console.error('Error fetching all stats:', err);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    console.warn('SQLite all stats fallback error:', err.message);
   }
+
+  res.json(DEFAULT_STATS);
 });
 
 // POST /api/stats — admin
@@ -773,6 +865,24 @@ const SETTINGS_DEFAULTS = {
 
 // GET /api/settings — public (site needs these values to render contact links)
 router.get('/settings', async (req, res) => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*');
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const settings = { ...SETTINGS_DEFAULTS };
+        data.forEach(item => {
+          if (item.key) settings[item.key] = item.value;
+        });
+        return res.json(settings);
+      }
+    } catch (err) {
+      console.warn('Supabase settings fetch failed, falling back:', err.message);
+    }
+  }
+
   try {
     const db = await getDb();
     const result = db.exec("SELECT key, value FROM settings");
@@ -780,11 +890,12 @@ router.get('/settings', async (req, res) => {
     if (result.length > 0 && result[0].values.length > 0) {
       result[0].values.forEach(([key, value]) => { settings[key] = value; });
     }
-    res.json(settings);
+    return res.json(settings);
   } catch (err) {
-    console.error('Get settings error:', err);
-    res.status(500).json({ error: 'Erro ao buscar configurações' });
+    console.warn('Get settings SQLite fallback (e.g. serverless without wasm):', err.message);
   }
+
+  res.json(SETTINGS_DEFAULTS);
 });
 
 // PUT /api/settings — admin (bulk upsert; body is a { key: value, ... } object)

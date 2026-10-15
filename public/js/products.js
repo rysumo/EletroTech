@@ -8,8 +8,44 @@ const Products = (() => {
   let categories = [];
   let currentFilter = 'all';
 
+  const DEFAULT_CATEGORIES = [
+    { id: 1, name_pt: 'Sondas e Monitoramento', name_en: 'Probes & Monitoring', name_es: 'Sondas y Monitoreo', slug: 'sondas', icon: '📡', sort_order: 1 },
+    { id: 2, name_pt: 'Painéis e Automação', name_en: 'Panels & Automation', name_es: 'Paneles y Automatización', slug: 'automacao', icon: '⚡', sort_order: 2 },
+    { id: 3, name_pt: 'Motores e Bombas', name_en: 'Motors & Pumps', name_es: 'Motores y Bombas', slug: 'motores', icon: '🔄', sort_order: 3 },
+    { id: 4, name_pt: 'Material Elétrico', name_en: 'Electrical Supplies', name_es: 'Material Eléctrico', slug: 'material-eletrico', icon: '🔌', sort_order: 4 },
+    { id: 5, name_pt: 'Linha Residencial', name_en: 'Residential Line', name_es: 'Línea Residencial', slug: 'residencial', icon: '🏠', sort_order: 5 },
+    { id: 6, name_pt: 'Alarmes e Segurança', name_en: 'Alarms & Security', name_es: 'Alarmas y Seguridad', slug: 'alarmes', icon: '🔔', sort_order: 6 },
+  ];
+
+  function ensureCategories() {
+    if (Array.isArray(categories) && categories.length > 0) return;
+
+    // Dynamically derive categories from loaded products if available
+    const seen = new Set();
+    const derived = [];
+    if (Array.isArray(allProducts)) {
+      allProducts.forEach(p => {
+        const slug = p.category_slug || (p.categories && p.categories.slug);
+        if (slug && !seen.has(slug)) {
+          seen.add(slug);
+          derived.push({
+            id: p.category_id || (derived.length + 1),
+            slug: slug,
+            name_pt: p.category_name_pt || (p.categories && p.categories.name_pt) || slug,
+            name_en: p.category_name_en || (p.categories && p.categories.name_en) || slug,
+            name_es: p.category_name_es || (p.categories && p.categories.name_es) || slug,
+            sort_order: derived.length + 1
+          });
+        }
+      });
+    }
+
+    categories = derived.length > 0 ? derived : DEFAULT_CATEGORIES;
+  }
+
   async function init() {
     await Promise.all([fetchCategories(), fetchProducts()]);
+    ensureCategories();
     renderFilterTabs();
     renderProducts();
   }
@@ -33,7 +69,7 @@ const Products = (() => {
       const res = await fetch('/api/categories');
       if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
         const data = await res.json();
-        categories = Array.isArray(data) ? data : [];
+        categories = Array.isArray(data) && data.length > 0 ? data : [];
       } else {
         categories = [];
       }
@@ -44,6 +80,7 @@ const Products = (() => {
   }
 
   function renderFilterTabs() {
+    ensureCategories();
     const container = document.getElementById('filter-tabs');
     if (!container) return;
 
@@ -51,11 +88,12 @@ const Products = (() => {
     const allLabel = { 'pt-BR': 'Todos', 'en': 'All', 'es': 'Todos' };
     const lang = I18n.getLang();
 
-    let html = `<button class="filter-tab active" data-filter="all">${allLabel[lang] || 'Todos'}</button>`;
+    let html = `<button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">${allLabel[lang] || 'Todos'}</button>`;
     categories.forEach(cat => {
       const name = cat[`name${suffix}`] || cat.name_pt;
       const iconSvg = typeof Icons !== 'undefined' ? Icons.getCategoryIcon(cat.slug) : '';
-      html += `<button class="filter-tab" data-filter="${cat.slug}">${iconSvg} ${name}</button>`;
+      const isActive = currentFilter === cat.slug ? 'active' : '';
+      html += `<button class="filter-tab ${isActive}" data-filter="${cat.slug}">${iconSvg} ${name}</button>`;
     });
 
     container.innerHTML = html;
