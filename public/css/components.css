@@ -697,51 +697,6 @@
   transform: translateY(-1px);
 }
 
-/* ============================
-   COUNTER / STATS
-   ============================ */
-.stat-card {
-  text-align: center;
-  padding: var(--space-xl);
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.stat-card:hover {
-  transform: translateY(-5px) scale(1.02);
-}
-
-.stat-icon {
-  font-size: 2.5rem;
-  margin-bottom: var(--space-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.stat-icon svg {
-  width: 44px;
-  height: 44px;
-  stroke: var(--color-accent-gold);
-}
-
-.stat-card:hover .stat-icon {
-  transform: scale(1.15) translateY(-2px);
-}
-
-.stat-value {
-  font-family: var(--font-heading);
-  font-size: var(--text-5xl);
-  color: var(--color-accent-gold);
-  line-height: 1;
-  margin-bottom: var(--space-sm);
-}
-
-.stat-label {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-}
 
 /* ============================
    SERVICE CARD

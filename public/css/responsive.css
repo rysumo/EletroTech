@@ -111,15 +111,6 @@
     grid-template-columns: 1fr;
   }
 
-  /* Stats */
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-lg);
-  }
-
-  .stat-value {
-    font-size: var(--text-4xl);
-  }
 
   /* Footer */
   .footer-grid {
@@ -185,9 +176,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .footer-grid {
     grid-template-columns: 1fr 1fr;
@@ -216,9 +204,6 @@
     text-align: center;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
 
   .about-highlight-item {
     flex-direction: column;

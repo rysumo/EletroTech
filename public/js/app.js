@@ -21,7 +21,6 @@ const App = (() => {
       Products.init(),
       FAQ.init(),
       fetchServices(),
-      fetchStats(),
     ]);
 
     console.log('[Eletrotech] Site ready.');
@@ -62,44 +61,8 @@ const App = (() => {
     Animations.initRevealAnimations();
   }
 
-  async function fetchStats() {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
-        const stats = await res.json();
-        renderStats(stats);
-      }
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-    }
-  }
-
-  function renderStats(stats) {
-    const grid = document.getElementById('stats-grid');
-    if (!grid) return;
-
-    const suffix = I18n.getLangSuffix();
-
-    grid.innerHTML = stats.map(stat => {
-      const label = stat[`label${suffix}`] || stat.label_pt;
-      const iconSvg = typeof Icons !== 'undefined' ? Icons.getStatIcon(stat) : '';
-
-      return `
-        <div class="stat-card reveal-scale">
-          <div class="stat-icon">${iconSvg}</div>
-          <div class="stat-value" data-value="${stat.value}" data-suffix="${stat.suffix || ''}">0</div>
-          <div class="stat-label">${label}</div>
-        </div>
-      `;
-    }).join('');
-
-    Animations.initRevealAnimations();
-    // Trigger smooth counter animations for newly rendered elements
-    Animations.initCounters();
-  }
-
   async function refreshDynamic() {
-    await Promise.all([fetchServices(), fetchStats()]);
+    await fetchServices();
   }
 
   return { init, refreshDynamic };
