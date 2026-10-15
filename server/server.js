@@ -26,9 +26,27 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
-app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/uploads', express.static(uploadsDir));
+// Serve static files with strict no-cache in local development
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+const staticOptions = {
+  etag: false,
+  lastModified: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+};
+
+app.use(express.static(path.join(__dirname, '..', 'public'), staticOptions));
+app.use('/uploads', express.static(uploadsDir, staticOptions));
 
 // API routes
 app.use('/api/auth', authRoutes);

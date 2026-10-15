@@ -88,43 +88,7 @@ const App = (() => {
     }).join('');
 
     Animations.initRevealAnimations();
-    // Re-init counters for newly added elements
-    initStatsCounters();
-  }
-
-  function initStatsCounters() {
-    const counters = document.querySelectorAll('.stat-value');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const target = parseInt(el.dataset.value);
-          const suffix = el.dataset.suffix || '';
-          animateCounter(el, target, suffix);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.5 });
-
-    counters.forEach(c => observer.observe(c));
-  }
-
-  function animateCounter(el, target, suffix) {
-    const duration = 2000;
-    const steps = 60;
-    const stepTime = duration / steps;
-    let current = 0;
-    const increment = target / steps;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        el.textContent = target + suffix;
-        clearInterval(timer);
-      } else {
-        el.textContent = Math.floor(current) + suffix;
-      }
-    }, stepTime);
+    Animations.initCounters();
   }
 
   async function refreshDynamic() {
