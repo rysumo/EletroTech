@@ -120,6 +120,19 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     expect(sitemapText).toContain('<urlset');
     expect(sitemapText).toContain('eletrotech');
   });
+
+  test('deve servir arquivo e meta tag de verificação do Google Search Console', async ({ page, request }) => {
+    // 1. Verifica arquivo estático de verificação HTML
+    const gscFileRes = await request.get(`${BASE_URL}/google038ae84a3baca0b8.html`);
+    expect(gscFileRes.status()).toBe(200);
+    const gscContent = await gscFileRes.text();
+    expect(gscContent.trim()).toBe('google-site-verification: google038ae84a3baca0b8.html');
+
+    // 2. Verifica meta tag no cabeçalho da página inicial
+    await page.goto(`${BASE_URL}/`);
+    const gscMeta = page.locator('meta[name="google-site-verification"]');
+    await expect(gscMeta).toHaveAttribute('content', 'google038ae84a3baca0b8');
+  });
 });
 
 test.describe('Eletrotech - Painel Administrativo (Enterprise Architecture)', () => {
