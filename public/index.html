@@ -20,8 +20,14 @@
   <meta name="geo.region" content="BR-PR">
   <meta name="geo.placename" content="Marechal Cândido Rondon">
 
-  <!-- Favicon & Identidade Visual -->
+  <!-- Favicon & Identidade Visual (Padrão Google Favicon & Apple) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
   <!-- URL Canônica & Hreflang (Multilíngue) -->
   <link rel="canonical" href="https://eletrotech-marechal.vercel.app/">
@@ -30,10 +36,10 @@
   <link rel="alternate" hreflang="es" href="https://eletrotech-marechal.vercel.app/?lang=es">
   <link rel="alternate" hreflang="x-default" href="https://eletrotech-marechal.vercel.app/">
 
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Facebook / Google Site Name -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://eletrotech-marechal.vercel.app/">
-  <meta property="og:site_name" content="Eletrotech Marechal">
+  <meta property="og:site_name" content="Eletrotech">
   <meta property="og:title" content="Eletrotech Marechal — Automação Elétrica, Piscicultura & OXILIFE FISH">
   <meta property="og:description" content="Soluções inteligentes em automação elétrica para piscicultura, indústrias e residências em Marechal Cândido Rondon e região. Conheça a sonda OXILIFE FISH.">
   <meta property="og:image" content="https://eletrotech-marechal.vercel.app/assets/images/oxilife-fish-probe.jpg">
@@ -61,6 +67,22 @@
   {
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://eletrotech-marechal.vercel.app/#website",
+        "name": "Eletrotech",
+        "alternateName": [
+          "Eletrotech Marechal",
+          "Eletrotech Automação",
+          "Eletrotech Marechal Cândido Rondon",
+          "Eletrotech Piscicultura"
+        ],
+        "url": "https://eletrotech-marechal.vercel.app/",
+        "inLanguage": "pt-BR",
+        "publisher": {
+          "@id": "https://eletrotech-marechal.vercel.app/#organization"
+        }
+      },
       {
         "@type": ["LocalBusiness", "Electrician"],
         "@id": "https://eletrotech-marechal.vercel.app/#organization",
@@ -159,6 +181,39 @@
             }
           }
         ]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://eletrotech-marechal.vercel.app/#service-automacao",
+        "name": "Automação para Piscicultura & Controle de Aeradores",
+        "serviceType": "Automação Industrial e Agropecuária",
+        "provider": {
+          "@id": "https://eletrotech-marechal.vercel.app/#organization"
+        },
+        "areaServed": "Oeste do Paraná",
+        "description": "Sistemas automatizados de monitoramento de oxigênio dissolvido e acionamento inteligente de aeradores para tanques de peixe."
+      },
+      {
+        "@type": "Service",
+        "@id": "https://eletrotech-marechal.vercel.app/#service-paineis",
+        "name": "Montagem e Manutenção de Painéis Elétricos",
+        "serviceType": "Montagem de Quadros de Comando",
+        "provider": {
+          "@id": "https://eletrotech-marechal.vercel.app/#organization"
+        },
+        "areaServed": "Oeste do Paraná",
+        "description": "Projetos e montagem de painéis elétricos industriais com inversores de frequência, soft-starters e proteções sob medida."
+      },
+      {
+        "@type": "Service",
+        "@id": "https://eletrotech-marechal.vercel.app/#service-motores",
+        "name": "Rebobinagem e Manutenção de Motores Elétricos & Bombas d'Água",
+        "serviceType": "Manutenção Eletromecânica",
+        "provider": {
+          "@id": "https://eletrotech-marechal.vercel.app/#organization"
+        },
+        "areaServed": "Oeste do Paraná",
+        "description": "Revisão completa, rebobinagem e testes de motores elétricos monofásicos e trifásicos com atendimento emergencial 24h."
       }
     ]
   }

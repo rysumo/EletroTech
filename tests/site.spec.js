@@ -81,12 +81,16 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     // Canonical & Favicon
     const canonical = page.locator('link[rel="canonical"]');
     await expect(canonical).toHaveAttribute('href', /eletrotech/);
-    const favicon = page.locator('link[rel="icon"]');
-    await expect(favicon).toHaveAttribute('href', '/favicon.svg');
+    const faviconSvg = page.locator('link[rel="icon"][type="image/svg+xml"]');
+    await expect(faviconSvg).toHaveAttribute('href', '/favicon.svg');
+    const favicon48 = page.locator('link[rel="icon"][sizes="48x48"]');
+    await expect(favicon48).toHaveAttribute('href', '/favicon-48x48.png');
 
-    // Open Graph & Twitter Cards
+    // Open Graph & Twitter Cards & Site Name
     const ogTitle = page.locator('meta[property="og:title"]');
     await expect(ogTitle).toHaveAttribute('content', /Eletrotech/);
+    const ogSiteName = page.locator('meta[property="og:site_name"]');
+    await expect(ogSiteName).toHaveAttribute('content', 'Eletrotech');
     const twitterCard = page.locator('meta[name="twitter:card"]');
     await expect(twitterCard).toHaveAttribute('content', 'summary_large_image');
   });
@@ -101,9 +105,16 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     const graph = schema['@graph'] || [];
     const types = graph.flatMap(item => Array.isArray(item['@type']) ? item['@type'] : [item['@type']]);
 
+    expect(types).toContain('WebSite');
     expect(types).toContain('LocalBusiness');
     expect(types).toContain('Product');
     expect(types).toContain('FAQPage');
+    expect(types).toContain('Service');
+
+    // Valida entidade WebSite para Google Search Site Name
+    const webSite = graph.find(item => item['@type'] === 'WebSite');
+    expect(webSite).toBeDefined();
+    expect(webSite.name).toBe('Eletrotech');
   });
 
   test('deve servir robots.txt e sitemap.xml publicamente', async ({ request }) => {
