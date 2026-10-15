@@ -17,7 +17,11 @@ const Products = (() => {
   async function fetchProducts() {
     try {
       const res = await fetch('/api/products');
-      allProducts = await res.json();
+      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+        allProducts = await res.json();
+      } else {
+        allProducts = [];
+      }
     } catch (err) {
       console.error('Error fetching products:', err);
       allProducts = [];
@@ -27,7 +31,11 @@ const Products = (() => {
   async function fetchCategories() {
     try {
       const res = await fetch('/api/categories');
-      categories = await res.json();
+      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+        categories = await res.json();
+      } else {
+        categories = [];
+      }
     } catch (err) {
       console.error('Error fetching categories:', err);
       categories = [];

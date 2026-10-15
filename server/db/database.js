@@ -27,9 +27,13 @@ async function getDb() {
 
 function saveDb() {
   if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(DB_PATH, buffer);
+  } catch (err) {
+    // Graceful fallback for read-only serverless filesystems (e.g. Vercel Lambda)
+  }
 }
 
 function initTables() {

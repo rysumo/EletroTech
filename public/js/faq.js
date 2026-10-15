@@ -14,7 +14,11 @@ const FAQ = (() => {
   async function fetchFAQ() {
     try {
       const res = await fetch('/api/faq');
-      faqData = await res.json();
+      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+        faqData = await res.json();
+      } else {
+        faqData = [];
+      }
     } catch (err) {
       console.error('Error fetching FAQ:', err);
       faqData = [];

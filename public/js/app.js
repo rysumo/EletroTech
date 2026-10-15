@@ -30,8 +30,10 @@ const App = (() => {
   async function fetchServices() {
     try {
       const res = await fetch('/api/services');
-      const services = await res.json();
-      renderServices(services);
+      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+        const services = await res.json();
+        renderServices(services);
+      }
     } catch (err) {
       console.error('Error fetching services:', err);
     }
@@ -63,8 +65,10 @@ const App = (() => {
   async function fetchStats() {
     try {
       const res = await fetch('/api/stats');
-      const stats = await res.json();
-      renderStats(stats);
+      if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
+        const stats = await res.json();
+        renderStats(stats);
+      }
     } catch (err) {
       console.error('Error fetching stats:', err);
     }

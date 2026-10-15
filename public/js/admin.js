@@ -29,8 +29,19 @@ const AdminApp = (() => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
+
+      const contentType = res.headers.get('content-type') || '';
+      let data = {};
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(res.status === 404
+          ? 'Serviço de autenticação temporariamente indisponível (404).'
+          : `Erro de comunicação com o servidor (${res.status})`);
+      }
+
+      if (!res.ok) throw new Error(data.error || 'Credenciais inválidas');
       token = data.token;
       localStorage.setItem('eletrotech-admin-token', token);
       showDashboard(data.user);
@@ -49,6 +60,8 @@ const AdminApp = (() => {
     try {
       const res = await fetch(`${API}/auth/verify`, { headers: authHeaders() });
       if (!res.ok) throw new Error();
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return false;
       const data = await res.json();
       return data.valid ? data.user : false;
     } catch {
@@ -88,6 +101,9 @@ const AdminApp = (() => {
   async function loadCategories() {
     try {
       const res = await fetch(`${API}/categories`);
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       categories = await res.json();
       const select = document.getElementById('product-category');
       select.innerHTML = '<option value="">Sem categoria</option>' +
@@ -98,6 +114,9 @@ const AdminApp = (() => {
   async function loadProducts() {
     try {
       const res = await fetch(`${API}/products/all`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const products = await res.json();
       const tbody = document.getElementById('products-tbody');
       tbody.innerHTML = products.map(p => `
@@ -216,6 +235,9 @@ const AdminApp = (() => {
   async function loadFaq() {
     try {
       const res = await fetch(`${API}/faq/all`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const faqs = await res.json();
       const tbody = document.getElementById('faq-tbody');
       tbody.innerHTML = faqs.map(f => `
@@ -296,6 +318,9 @@ const AdminApp = (() => {
   async function loadServices() {
     try {
       const res = await fetch(`${API}/services/all`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const services = await res.json();
       const tbody = document.getElementById('services-tbody');
       tbody.innerHTML = services.map(s => `

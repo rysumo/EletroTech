@@ -75,14 +75,23 @@ const staticOptions = {
 app.use(express.static(path.join(__dirname, '..', 'public'), staticOptions));
 app.use('/uploads', express.static(uploadsDir, staticOptions));
 
-// API routes
+// API routes — mounted with and without /api prefix for seamless Vercel serverless compatibility
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/products', productRoutes);
+app.use('/products', productRoutes);
+
 app.use('/api', apiRoutes);
+
+// Structured JSON 404 for any unhandled API routes
+app.use(['/api', '/api/*'], (req, res) => {
+  res.status(404).json({ error: 'Endpoint da API não encontrado' });
+});
 
 // SPA fallback — serve index.html for non-API routes with strict no-cache
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/auth') && !req.path.startsWith('/products')) {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
@@ -97,22 +106,20 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize database and start server locally when not running inside Vercel serverless
-async function initServer() {
-  try {
-    await getDb();
-  } catch (err) {
-    console.warn('Local database initialization note:', err.message);
-  }
+if (!process.env.VERCEL && require.main === module) {
+  (async () => {
+    try {
+      await getDb();
+    } catch (err) {
+      console.warn('Local database initialization note:', err.message);
+    }
 
-  if (!process.env.VERCEL && require.main === module) {
     app.listen(PORT, () => {
       console.log(`\n🚀 Eletrotech server running at http://localhost:${PORT}`);
       console.log(`📦 API available at http://localhost:${PORT}/api`);
       console.log(`🛡️ Admin panel (Clean URL) at http://localhost:${PORT}/admin\n`);
     });
-  }
+  })();
 }
-
-initServer();
 
 module.exports = app;
