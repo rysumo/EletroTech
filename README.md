@@ -2,6 +2,8 @@
 
 Site institucional, catálogo interativo e painel administrativo da **Eletrotech** — Soluções em automação elétrica, montagem de painéis industriais e monitoramento inteligente para piscicultura (destaque para a sonda **OXILIFE FISH**).
 
+Deploy pronto para nuvem na **Vercel** com backend Serverless e banco de dados **Supabase** (com fallback automático para SQLite local).
+
 ---
 
 ## 🌟 Destaques & Engenharia de Animações
@@ -17,6 +19,8 @@ O projeto incorpora uma camada de design e micro-interações de alto padrão (*
 - **Feedback Tátil**: Compressão tátil elástica em botões e abas (`scale(0.97)` no `:active`), além de *overshoot spring* nos ícones.
 - **Acessibilidade Rigorosa (A11y)**: Suporte completo à media query `prefers-reduced-motion: reduce`, desativando animações e apresentando o conteúdo imediatamente para usuários sensíveis a movimento.
 
+> Para detalhes e parâmetros de cada animação, consulte [`ANIMACOES.md`](./ANIMACOES.md).
+
 ---
 
 ## 🚀 Tecnologias
@@ -26,15 +30,17 @@ O projeto incorpora uma camada de design e micro-interações de alto padrão (*
   - CSS3 Moderno (Design Tokens, Custom Properties, Grid, Flexbox, Keyframes, Glassmorphism).
   - JavaScript Modular Vanilla (ES6+, padrão IIFE, `IntersectionObserver`, `requestAnimationFrame`).
   - Suporte Multilíngue nativo (Português, Inglês e Espanhol).
-- **Backend**:
+- **Backend & Serverless**:
   - Node.js & Express.
+  - Serverless Function Adapter para deploy na **Vercel** (`api/index.js`).
   - Segurança com Helmet e CORS configurados.
-  - Upload de imagens via Multer.
-  - Middlewares com controle estrito de cache em desenvolvimento (`Cache-Control: no-cache, no-store`).
-- **Banco de Dados**:
-  - SQLite persistente através do WebAssembly (`sql.js`).
+  - Upload e manipulação de imagens via Multer.
+  - Middlewares com controle de cache inteligente (`Cache-Control: no-cache, no-store`).
+- **Banco de Dados (Híbrido)**:
+  - **Produção / Nuvem**: **Supabase** (PostgreSQL na nuvem via `@supabase/supabase-js`).
+  - **Local / Offline**: SQLite persistente em arquivo através de WebAssembly (`sql.js`).
 - **Autenticação**:
-  - JWT (JSON Web Tokens) e hash de senhas com Bcrypt.
+  - JWT (JSON Web Tokens) e hash seguro com Bcrypt.
 - **Qualidade & Testes**:
   - Playwright E2E.
 
@@ -43,6 +49,8 @@ O projeto incorpora uma camada de design e micro-interações de alto padrão (*
 ## 📁 Estrutura do Projeto
 
 ```text
+├── api/                   # Serverless Functions (Vercel)
+│   └── index.js           # Ponto de entrada do backend para a Vercel
 ├── public/                # Frontend da aplicação
 │   ├── assets/            # Imagens e mídias otimizadas
 │   ├── css/               # Folhas de estilo modulares
@@ -64,18 +72,48 @@ O projeto incorpora uma camada de design e micro-interações de alto padrão (*
 │   ├── index.html         # Página principal da Eletrotech
 │   └── admin.html         # Painel administrativo
 ├── server/                # Backend da aplicação
-│   ├── db/                # Banco SQLite (eletrotech.db) e seed inicial
+│   ├── db/                # Conexões e scripts de banco
+│   │   ├── database.js    # Adaptador SQLite local (sql.js)
+│   │   ├── supabase.js    # Cliente Supabase para nuvem
+│   │   ├── seed.js        # Populador inicial SQLite
+│   │   └── seed.sql       # Script SQL inicial para Supabase
 │   ├── middleware/        # Middlewares de autenticação JWT
 │   ├── routes/            # Rotas REST (/api/products, /api/auth, /api)
 │   └── server.js          # Servidor principal Express
 ├── tests/                 # Testes automatizados (Playwright)
+├── .env.example           # Modelo de variáveis de ambiente
+├── vercel.json            # Configuração de rotas e serverless na Vercel
+├── ANIMACOES.md           # Especificação detalhada das animações
 ├── package.json           # Dependências e scripts
 └── .gitignore             # Configuração de arquivos ignorados
 ```
 
 ---
 
-## 🛠️ Como Executar
+## ⚙️ Variáveis de Ambiente
+
+Para rodar com Supabase ou configurar portas, crie um arquivo `.env` na raiz do projeto baseado em `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+```env
+# Configuração Supabase (obrigatório para produção / opcional para local)
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua-chave-anonima
+SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
+
+# Configurações do Servidor
+PORT=3000
+JWT_SECRET=sua-chave-secreta-jwt
+```
+
+> **Nota**: Se `SUPABASE_URL` não for configurado no `.env`, o servidor opera automaticamente com o banco de dados **SQLite local** (`server/db/eletrotech.db`).
+
+---
+
+## 🛠️ Como Executar Localmente
 
 ### 1. Pré-requisitos
 - Node.js instalado (v18 ou superior recomendado).
@@ -85,7 +123,8 @@ O projeto incorpora uma camada de design e micro-interações de alto padrão (*
 npm install
 ```
 
-### 3. Popular o banco de dados (caso inicial ou para redefinição)
+### 3. Popular o banco de dados local (SQLite)
+Caso queira reiniciar ou inicializar o banco local:
 ```bash
 npm run seed
 ```
@@ -102,7 +141,17 @@ npm run dev
 O servidor estará acessível em:
 - **Site público**: [http://localhost:3000](http://localhost:3000)
 - **Painel administrativo**: [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
-- **API**: [http://localhost:3000/api](http://localhost:3000/api)
+- **API REST**: [http://localhost:3000/api](http://localhost:3000/api)
+
+---
+
+## 🚀 Deploy na Vercel
+
+O projeto está pronto para deploy serverless na Vercel:
+
+1. Importe o repositório no painel da **[Vercel](https://vercel.com)**.
+2. Nas configurações de **Environment Variables**, adicione as chaves do Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`).
+3. O arquivo [`vercel.json`](./vercel.json) e o adaptador [`api/index.js`](./api/index.js) cuidam do roteamento de todas as rotas `/api/*` diretamente para o Express Serverless.
 
 ---
 
