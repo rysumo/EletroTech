@@ -45,7 +45,8 @@ const Products = (() => {
     let html = `<button class="filter-tab active" data-filter="all">${allLabel[lang] || 'Todos'}</button>`;
     categories.forEach(cat => {
       const name = cat[`name${suffix}`] || cat.name_pt;
-      html += `<button class="filter-tab" data-filter="${cat.slug}">${cat.icon || ''} ${name}</button>`;
+      const iconSvg = typeof Icons !== 'undefined' ? Icons.getCategoryIcon(cat.slug) : '';
+      html += `<button class="filter-tab" data-filter="${cat.slug}">${iconSvg} ${name}</button>`;
     });
 
     container.innerHTML = html;
@@ -108,9 +109,9 @@ const Products = (() => {
       return `
         <div class="card reveal-scale ${visibilityClass}" ${staggerStyle} data-product-id="${product.id}">
           ${product.discount_percent > 0 ? `<span class="card-badge">-${product.discount_percent}%</span>` : ''}
-          ${product.is_featured ? `<span class="card-featured">⭐ Destaque</span>` : ''}
+          ${product.is_featured ? `<span class="card-featured"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Destaque</span>` : ''}
           <div class="card-image product-card-placeholder" ${product.image ? `role="img" aria-label="${name}" style="background-image: url('${product.image}'); background-size: cover; background-position: center; color: transparent;"` : ''}>
-            ${!product.image ? '📦' : ''}
+            ${!product.image ? `<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="opacity: 0.35;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>` : ''}
           </div>
           <div class="card-body">
             <span class="card-category">${catName}</span>

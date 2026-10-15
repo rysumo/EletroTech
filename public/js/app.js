@@ -4,7 +4,7 @@
 
 const App = (() => {
   async function init() {
-    console.log('🚀 Eletrotech site initializing...');
+    console.log('[Eletrotech] Site initializing...');
 
     // Set current year in footer
     const yearEl = document.getElementById('current-year');
@@ -24,7 +24,7 @@ const App = (() => {
       fetchStats(),
     ]);
 
-    console.log('✅ Eletrotech site ready!');
+    console.log('[Eletrotech] Site ready.');
   }
 
   async function fetchServices() {
@@ -46,10 +46,11 @@ const App = (() => {
     grid.innerHTML = services.map(service => {
       const title = service[`title${suffix}`] || service.title_pt;
       const desc = service[`description${suffix}`] || service.description_pt;
+      const iconSvg = typeof Icons !== 'undefined' ? Icons.getServiceIcon(service) : '';
 
       return `
         <div class="service-card reveal-scale">
-          <div class="service-card-icon">${service.icon || '⚡'}</div>
+          <div class="service-card-icon">${iconSvg}</div>
           <h5 class="service-card-title">${title}</h5>
           <p class="service-card-text">${desc}</p>
         </div>
@@ -77,10 +78,11 @@ const App = (() => {
 
     grid.innerHTML = stats.map(stat => {
       const label = stat[`label${suffix}`] || stat.label_pt;
+      const iconSvg = typeof Icons !== 'undefined' ? Icons.getStatIcon(stat) : '';
 
       return `
         <div class="stat-card reveal-scale">
-          <div class="stat-icon">${stat.icon || '📊'}</div>
+          <div class="stat-icon">${iconSvg}</div>
           <div class="stat-value" data-value="${stat.value}" data-suffix="${stat.suffix || ''}">0</div>
           <div class="stat-label">${label}</div>
         </div>

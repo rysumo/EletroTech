@@ -1,169 +1,167 @@
 # EletroTech ⚡🐟
+### Tecnologia Inteligente em Automação Elétrica & Piscicultura de Alta Precisão
 
-Site institucional, catálogo interativo e painel administrativo da **Eletrotech** — Soluções em automação elétrica, montagem de painéis industriais e monitoramento inteligente para piscicultura (destaque para a sonda **OXILIFE FISH**).
-
-Deploy pronto para nuvem na **Vercel** com backend Serverless e banco de dados **Supabase** (com fallback automático para SQLite local).
-
----
-
-## 🌟 Destaques & Engenharia de Animações
-
-O projeto incorpora uma camada de design e micro-interações de alto padrão (*agency-tier*), inspirada em referências visuais modernas como Admove.ai e Quadrangular, mantendo 100% de conformidade com performance na GPU e acessibilidade:
-
-- **Física LERP e 3D Tilt**: Efeito de inclinação tridimensional no Hero e na Sonda OXILIFE FISH com interpolação suave via LERP (*Linear Interpolation*, fator `0.08`), perspectiva de `1200px` e flutuação senoidal contínua no eixo Y.
-- **Spotlight de Luz Interativo**: Efeito radial de iluminação nos cards (`.card`, `.service-card`, `.stat-card`) que segue dinamicamente as coordenadas do cursor via CSS Variables (`--mouse-x`, `--mouse-y`) com delegação de eventos passiva.
-- **Scroll Reveal com Foco Óptico**: Revelação de elementos na rolagem combinando desfoque progressivo (`blur(5px)` → `0`), micro-escala e cálculo automático de *stagger* temporal entre elementos irmãos (`min(idx * 60ms, 320ms)`).
-- **Aura & Halos Luminosos**: Halo respiratório suave ao redor da sonda OXILIFE FISH e aura luminosa ambiente de 550px no Hero (`aura-pulse` e `probe-halo`).
-- **Simulação Hidrodinâmica de Bolhas de O₂**: 28 partículas aquáticas geradas parametricamente com oscilação lateral senoidal em múltiplos keyframes e velocidades/opacidades orgânicas.
-- **Filtro de Catálogo com Transição em 2 Tempos**: Alternância de abas de produtos com fade-slide de saída (`220ms`), troca de dados e reentrada suave (`350ms`) com *force reflow*.
-- **Feedback Tátil**: Compressão tátil elástica em botões e abas (`scale(0.97)` no `:active`), além de *overshoot spring* nos ícones.
-- **Acessibilidade Rigorosa (A11y)**: Suporte completo à media query `prefers-reduced-motion: reduce`, desativando animações e apresentando o conteúdo imediatamente para usuários sensíveis a movimento.
-
-> Para detalhes e parâmetros de cada animação, consulte [`ANIMACOES.md`](./ANIMACOES.md).
+[![Website](https://img.shields.io/badge/Status-Em_Produção-10b981?style=for-the-badge&logo=vercel)](http://localhost:3000)
+[![Tech](https://img.shields.io/badge/Stack-Node.js_•_Express_•_Supabase_•_Vanilla_ES6+-10326f?style=for-the-badge)](https://nodejs.org)
+[![Tests](https://img.shields.io/badge/Playwright_E2E-11%2F11_Passando-10b981?style=for-the-badge&logo=playwright)](https://playwright.dev)
+[![Location](https://img.shields.io/badge/Origem-Oeste_do_Paraná_•_Desde_2018-c9a84c?style=for-the-badge)](#sobre-a-empresa)
 
 ---
 
-## 🚀 Tecnologias
+## 🌊 Visão Geral do Projeto
 
-- **Frontend**:
-  - HTML5 Semântico e responsivo.
-  - CSS3 Moderno (Design Tokens, Custom Properties, Grid, Flexbox, Keyframes, Glassmorphism).
-  - JavaScript Modular Vanilla (ES6+, padrão IIFE, `IntersectionObserver`, `requestAnimationFrame`).
-  - Suporte Multilíngue nativo (Português, Inglês e Espanhol).
-- **Backend & Serverless**:
-  - Node.js & Express.
-  - Serverless Function Adapter para deploy na **Vercel** (`api/index.js`).
-  - Segurança com Helmet e CORS configurados.
-  - Upload e manipulação de imagens via Multer.
-  - Middlewares com controle de cache inteligente (`Cache-Control: no-cache, no-store`).
-- **Banco de Dados (Híbrido)**:
-  - **Produção / Nuvem**: **Supabase** (PostgreSQL na nuvem via `@supabase/supabase-js`).
-  - **Local / Offline**: SQLite persistente em arquivo através de WebAssembly (`sql.js`).
-- **Autenticação**:
-  - JWT (JSON Web Tokens) e hash seguro com Bcrypt.
-- **Qualidade & Testes**:
-  - Playwright E2E.
+A **Eletrotech** é uma empresa de engenharia e soluções técnicas em automação elétrica, montagem de painéis industriais e tecnologia agroindustrial, sediada no **Oeste do Paraná** — o maior polo de produção de tilápias e piscicultura de precisão do Brasil.
+
+Esta plataforma digital foi concebida para unir **presença de marca de alto impacto visual (*agency-tier*)**, **apresentação do ecossistema de soluções técnicas** e uma **arquitetura de software resiliente e segura**:
+
+1. **Presença Institucional de Excelência**: Direção de arte cinematográfica, micro-interações táteis, ícones vetoriais sob medida e física de movimento fluida.
+2. **Apresentação Técnica da Sonda OXILIFE FISH**: Destaque zootécnico e financeiro do produto carro-chefe da empresa, demonstrando os benefícios de oxigenação sob demanda e economia energética.
+3. **Catálogo Reativo de Equipamentos & Serviços**: Vitrine dinâmica por categorias com busca instantânea, detalhes em modal e conversão direta via WhatsApp.
+4. **Painel de Gestão Administrativa Enterprise**: Sistema autenticado com rotas canônicas limpas (`/admin`), controle de acesso por JWT, hash Bcrypt e proteção por Rate Limiting.
+5. **Infraestrutura Híbrida e Resiliente**: Pronta para operação serverless na **Vercel** com banco **Supabase** (PostgreSQL) na nuvem e contingência automática para **SQLite local** caso o servidor opere offline.
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🎯 O Desafio da Piscicultura & A Solução OXILIFE FISH
 
-```text
-├── api/                   # Serverless Functions (Vercel)
-│   └── index.js           # Ponto de entrada do backend para a Vercel
-├── public/                # Frontend da aplicação
-│   ├── assets/            # Imagens e mídias otimizadas
-│   ├── css/               # Folhas de estilo modulares
-│   │   ├── variables.css  # Design tokens, paleta e curvas de transição
-│   │   ├── base.css       # Reset, tipografia global e classes .reveal
-│   │   ├── components.css # Navbar, cards com spotlight, botões táteis, modal
-│   │   ├── sections.css   # Hero aura, halos, bolhas O₂ e seções
-│   │   ├── responsive.css # Breakpoints e adaptações mobile/tablet
-│   │   └── admin.css      # Estilização do painel administrativo
-│   ├── js/                # Scripts modulares do cliente
-│   │   ├── animations.js  # LERP tilt 3D, spotlight, reveals, bolhas e contadores
-│   │   ├── products.js    # Catálogo dinâmico, filtros suaves e modal
-│   │   ├── app.js         # Orquestrador principal da aplicação
-│   │   ├── navigation.js  # Navbar fixa e menu mobile
-│   │   ├── faq.js         # Accordion animado com curva spring
-│   │   ├── i18n.js        # Motor de internacionalização (PT/EN/ES)
-│   │   └── admin.js       # CRUD e gestão administrativa de produtos
-│   ├── i18n/              # Dicionários de tradução JSON (pt-BR, en, es)
-│   ├── index.html         # Página principal da Eletrotech
-│   └── admin.html         # Painel administrativo
-├── server/                # Backend da aplicação
-│   ├── db/                # Conexões e scripts de banco
-│   │   ├── database.js    # Adaptador SQLite local (sql.js)
-│   │   ├── supabase.js    # Cliente Supabase para nuvem
-│   │   ├── seed.js        # Populador inicial SQLite
-│   │   └── seed.sql       # Script SQL inicial para Supabase
-│   ├── middleware/        # Middlewares de autenticação JWT
-│   ├── routes/            # Rotas REST (/api/products, /api/auth, /api)
-│   └── server.js          # Servidor principal Express
-├── tests/                 # Testes automatizados (Playwright)
-├── .env.example           # Modelo de variáveis de ambiente
-├── vercel.json            # Configuração de rotas e serverless na Vercel
-├── ANIMACOES.md           # Especificação detalhada das animações
-├── package.json           # Dependências e scripts
-└── .gitignore             # Configuração de arquivos ignorados
+Na piscicultura intensiva (tanques e açudes de tilápia), o **Oxigênio Dissolvido (O₂)** é a variável zootécnica de maior risco:
+
+- **O Problema**: A taxa de oxigênio cai drasticamente durante as madrugadas devido ao consumo biológico e ausência de fotossíntese. Uma queda brusca causa a perda súbita de toneladas de peixes em poucos minutos. Por receio, piscicultores costumam manter todos os aeradores ligados a noite toda, gerando **desperdício de milhares de reais em contas de energia elétrica** e desgastando os motores prematuramente.
+- **A Solução OXILIFE FISH**: Um sistema inteligente composto por sonda de oxigênio de imersão de alta durabilidade aliada a um painel de automação industrial microprocessado que controla o acionamento em quatro estágios independentes.
+
+```
+                  ┌─────────────────────────────────────────┐
+                  │          SONDA OXILIFE FISH             │
+                  │   (Leitura contínua de O₂ e Temp.)      │
+                  └────────────────────┬────────────────────┘
+                                       │ Telemetria em Tempo Real
+                                       ▼
+                  ┌─────────────────────────────────────────┐
+                  │       PAINEL INDUSTRIAL ELETROTECH      │
+                  │  • Microprocessador de alta precisão    │
+                  │  • Alarmes sonoros & notificações WiFi  │
+                  └──────┬──────────┬──────────┬──────────┬─┘
+                         │          │          │          │
+                 Grupo 1 │  Grupo 2 │  Grupo 3 │  Grupo 4 │
+                         ▼          ▼          ▼          ▼
+                  [Aerador 1] [Aerador 2] [Aerador 3] [Aerador 4]
+                     (Ligam e desligam somente sob demanda real)
 ```
 
+### 🏆 Principais Diferenciais da OXILIFE FISH:
+
+- **⚡ Economia de até 40% em Energia Elétrica**: Os aeradores só entram em operação de maneira escalonada conforme a real necessidade do tanque, evitando o consumo desnecessário da tarifa de ponta.
+- **🛡️ Segurança Absoluta com Alarmes 24h**: Sirene local de alta intensidade e notificações imediatas via aplicativo no celular para níveis críticos de O₂ ou desvios térmicos.
+- **📱 Monitoramento & Controle Remoto**: Acompanhamento dos parâmetros dos açudes em tempo real pelo smartphone via conexão WiFi.
+- **🌡️ Manejo Zootécnico Integrado**: Monitoramento constante de temperatura para auxílio no ajuste fino do arraçoamento e melhor conversão alimentar.
+- **💾 Histórico da Lagoa em Pendrive**: Exportação USB dos registros contínuos de oxigênio e acionamentos para auditoria de ciclo e relatórios zootécnicos.
+- **🏭 Robustez Industrial Customizável**: Montagem em gabinetes de alta durabilidade com componentes industriais de ponta, permitindo controlar até **3 sondas independentes no mesmo painel**.
+
 ---
 
-## ⚙️ Variáveis de Ambiente
+## 📦 Linhas de Produtos & Serviços Eletrotech
 
-Para rodar com Supabase ou configurar portas, crie um arquivo `.env` na raiz do projeto baseado em `.env.example`:
+A plataforma atende desde pequenos e médios piscicultores até grandes complexos agroindustriais:
 
+| Categoria | Descrição | Principais Itens |
+|---|---|---|
+| **Monitoramento & Piscicultura** | Controle de qualidade de água e segurança dos viveiros | Sondas OXILIFE FISH, Oxímetros Manuais Portáteis, Alarmes Sonoros sem fio |
+| **Painéis & Automação** | Projetos elétricos industriais e agropecuários | Quadros de comando, Soft-Starters, Inversores de Frequência, Automação CLP |
+| **Motores & Bombas** | Fornecimento, manutenção e recondicionamento | Motores elétricos Hércules (alta eficiência), rebobinamento técnico e bombas d'água |
+| **Materiais Elétricos** | Linha completa de insumos de instalação industrial | Contatoras, relés térmicos, disjuntores motor, caixas de passagem e automação |
+| **Linha Residencial** | Conforto, economia e pressurização predial | Linha completa de duchas e torneiras elétricas inteligentes Zagonel |
+
+---
+
+## ✨ A Experiência Digital: Engenharia de Animações & UI/UX
+
+A interface foi projetada com engenharia de micro-interações inspirada em referências visuais de ponta (*agency-tier*), garantindo fidelidade técnica, fluidez a 60fps e acessibilidade universal:
+
+- **LERP Spring Parallax (3D Tilt)**: O card da Sonda OXILIFE FISH e o elemento Hero reagem ao cursor do mouse com inclinação tridimensional calculada via algoritmo de interpolação linear contínua (LERP com fator `0.08`), complementada por flutuação senoidal contínua no eixo Y.
+- **Spotlight Dinâmico de Luz**: Iluminação radial dourada que segue as coordenadas exatas do cursor sobre os cards (`--mouse-x` e `--mouse-y`), destacando detalhes de acabamento e profundidade com delegação de eventos passiva na GPU.
+- **Scroll Reveal com Foco Óptico**: Transição cinematográfica de revelação na rolagem combinando desfoque progressivo (`blur(5px)` → `0`), micro-escala e escalonamento temporal inteligente (*stagger*) entre itens vizinhos.
+- **Atmosfera Aquática Orgânica**: Simulação generativa de 28 bolhas de O₂ com profundidade, opacidades calibradas e oscilação lateral senoidal em múltiplos keyframes.
+- **Design System Vetorial**: Substituição completa de emojis nativos por ícones SVG geométricos de alta precisão técnica integrados via módulo `Icons`.
+- **Transição de Catálogo Fluida**: Alternância entre categorias com transição de duas fases (fade-slide de saída em `220ms` e reentrada em `350ms`) com *force reflow* para estabilidade visual.
+- **Acessibilidade Universal**: Respeito estrito à preferência do sistema `prefers-reduced-motion: reduce`, desativando animações e exibindo o conteúdo imediatamente para usuários sensíveis.
+- **Multilíngue Nativo**: Suporte em tempo real para **Português, Inglês e Espanhol** via dicionários JSON assíncronos.
+
+---
+
+## 🏛️ Arquitetura do Software & Segurança Enterprise
+
+O sistema adota uma estrutura em camadas, projetada para alta disponibilidade, segurança defensiva e transição suave entre desenvolvimento local e produção serverless:
+
+```
+[ Cliente Web (Vanilla ES6+ Modular) ]
+   ├── Design Tokens & CSS Glassmorphism
+   ├── Animações Físicas (LERP, RAF, IntersectionObserver)
+   ├── Design System SVG & Dicionários I18n (PT / EN / ES)
+   └── SEO Técnico, OpenGraph & Schema Markup (JSON-LD)
+            │
+            │ REST API (JSON)
+            ▼
+[ Backend Express / Node.js ]
+   ├── Rota Canônica Limpa (/admin) com Redirecionamento 301 de /admin.html
+   ├── Camada de Segurança: Helmet, CORS restritivo e Rate Limiting
+   ├── Autenticação Segura: JWT (HttpOnly/Bearer) + Hash de Senhas com Bcrypt
+   ├── Upload e Otimização de Mídias via Multer
+   └── Adaptador Serverless para Deploy Vercel (api/index.js)
+            │
+            ├── Em Produção (Nuvem):
+            │   └── Supabase (PostgreSQL Gerenciado + Storage)
+            │
+            └── Em Desenvolvimento / Fallback Local:
+                └── SQLite Persistente via WebAssembly (sql.js)
+```
+
+### Robustez & Qualidade de Código:
+- **11 Testes Automatizados E2E (Playwright)**: Cobertura total de navegação, alternância de idiomas, filtros do catálogo, modais, FAQ dinâmico, meta tags SEO, JSON-LD, `robots.txt`, `sitemap.xml` e rotas administrativas.
+- **URL Canônica `/admin`**: Acesso simplificado e profissional ao painel, com redirecionamento automático permanente (HTTP 301) para manter retrocompatibilidade com links antigos.
+- **Rate Limiting Ativo**: Proteção contra ataques de força bruta no endpoint de login e mitigação de abuso nas requisições da API.
+
+---
+
+## 🏢 Sobre a Empresa
+
+- **Fundação**: Agosto de 2018 (8 anos de sólida atuação regional).
+- **Sedes**: Marechal Cândido Rondon e Toledo — Oeste do Paraná.
+- **Diferencial Exclusivo**: Atendimento e plantão técnico de emergência **24 horas por dia (inclusive madrugadas, finais de semana e feriados)** para socorro imediato a viveiros de piscicultura e paradas de linha industrial.
+- **Compromisso**: Confiabilidade extrema, respeito absoluto aos prazos acordados e suporte próximo ao produtor rural e à indústria.
+
+---
+
+## 🛠️ Guia Rápido de Execução & Testes
+
+### Pré-requisitos
+- **Node.js** (v18 ou superior recomendado).
+
+### Instalação & Execução
 ```bash
-cp .env.example .env
-```
-
-```env
-# Configuração Supabase (obrigatório para produção / opcional para local)
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_ANON_KEY=sua-chave-anonima
-SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
-
-# Configurações do Servidor
-PORT=3000
-JWT_SECRET=sua-chave-secreta-jwt
-```
-
-> **Nota**: Se `SUPABASE_URL` não for configurado no `.env`, o servidor opera automaticamente com o banco de dados **SQLite local** (`server/db/eletrotech.db`).
-
----
-
-## 🛠️ Como Executar Localmente
-
-### 1. Pré-requisitos
-- Node.js instalado (v18 ou superior recomendado).
-
-### 2. Instalação das dependências
-```bash
+# 1. Instalar dependências
 npm install
-```
 
-### 3. Popular o banco de dados local (SQLite)
-Caso queira reiniciar ou inicializar o banco local:
-```bash
+# 2. Inicializar banco de dados local (SQLite)
 npm run seed
-```
 
-### 4. Iniciar o servidor
-```bash
-npm start
-```
-Ou em modo de desenvolvimento com recarregamento automático:
-```bash
+# 3. Iniciar o servidor em modo desenvolvimento
 npm run dev
 ```
 
-O servidor estará acessível em:
-- **Site público**: [http://localhost:3000](http://localhost:3000)
-- **Painel administrativo (Clean URL)**: [http://localhost:3000/admin](http://localhost:3000/admin) *(redirecionamento canônico automático para quem acessar `/admin.html`)*
-- **API REST**: [http://localhost:3000/api](http://localhost:3000/api)
+Acesse:
+- **Site Público**: [http://localhost:3000](http://localhost:3000)
+- **Painel Administrativo**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **Documentação da API**: [http://localhost:3000/api](http://localhost:3000/api)
 
----
-
-## 🚀 Deploy na Vercel
-
-O projeto está pronto para deploy serverless na Vercel:
-
-1. Importe o repositório no painel da **[Vercel](https://vercel.com)**.
-2. Nas configurações de **Environment Variables**, adicione as chaves do Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`).
-3. O arquivo [`vercel.json`](./vercel.json) e o adaptador [`api/index.js`](./api/index.js) cuidam do roteamento de todas as rotas `/api/*` diretamente para o Express Serverless.
-
----
-
-## 🧪 Testes
-
-Para executar a suíte de testes ponta a ponta com Playwright:
+### Execução dos Testes Automatizados
 ```bash
+# Executar a bateria completa de 11 testes Playwright
 npx playwright test
 ```
 
 ---
 
-## 📄 Licença
+## 📄 Licença & Direitos
 
-Proprietário © Eletrotech. Todos os direitos reservados.
+© **Eletrotech** — Soluções em Automação Elétrica & Piscicultura de Alta Precisão. Todos os direitos reservados.  
+Desenvolvido com excelência técnica para o fortalecimento do agronegócio e da indústria nacional.
