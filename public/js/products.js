@@ -7,15 +7,11 @@ const Products = (() => {
   let allProducts = [];
   let categories = [];
   let currentFilter = 'all';
-  let filterTimeout = null;
-
-  const prefersReducedMotion = () =>
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   async function init() {
     await Promise.all([fetchCategories(), fetchProducts()]);
     renderFilterTabs();
-    renderProducts(false);
+    renderProducts();
   }
 
   async function fetchProducts() {
@@ -46,60 +42,41 @@ const Products = (() => {
     const allLabel = { 'pt-BR': 'Todos', 'en': 'All', 'es': 'Todos' };
     const lang = I18n.getLang();
 
-    let html = `<button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">${allLabel[lang] || 'Todos'}</button>`;
+    let html = `<button class="filter-tab active" data-filter="all">${allLabel[lang] || 'Todos'}</button>`;
     categories.forEach(cat => {
       const name = cat[`name${suffix}`] || cat.name_pt;
-      const isActive = currentFilter === cat.slug ? 'active' : '';
-      html += `<button class="filter-tab ${isActive}" data-filter="${cat.slug}">${cat.icon || ''} ${name}</button>`;
+      html += `<button class="filter-tab" data-filter="${cat.slug}">${cat.icon || ''} ${name}</button>`;
     });
 
     container.innerHTML = html;
 
-    // Add click handlers with smooth exit/enter transition
+    // Add click handlers
     container.querySelectorAll('.filter-tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        const nextFilter = tab.dataset.filter;
-        // Ignora clique na aba já ativa
-        if (nextFilter === currentFilter) return;
-
-        currentFilter = nextFilter;
+        if (currentFilter === tab.dataset.filter) return;
+        currentFilter = tab.dataset.filter;
         container.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
 
-        transitionProductsGrid();
+        const grid = document.getElementById('products-grid');
+        if (grid) {
+          // Fluid exit: fade out and subtle slide
+          grid.style.transition = 'opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)';
+          grid.style.opacity = '0';
+          grid.style.transform = 'translateY(12px) scale(0.99)';
+
+          setTimeout(() => {
+            renderProducts(true);
+            // Silky-smooth entry with ease-out curve
+            grid.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+            grid.style.opacity = '1';
+            grid.style.transform = 'translateY(0) scale(1)';
+          }, 220);
+        } else {
+          renderProducts();
+        }
       });
     });
-  }
-
-  function transitionProductsGrid() {
-    const grid = document.getElementById('products-grid');
-    if (!grid || prefersReducedMotion()) {
-      renderProducts(true);
-      return;
-    }
-
-    if (filterTimeout) {
-      clearTimeout(filterTimeout);
-    }
-
-    // 1. Saída (220ms, cubic-bezier(0.4, 0, 0.2, 1))
-    grid.style.transition =
-      'opacity 220ms cubic-bezier(0.4, 0, 0.2, 1), transform 220ms cubic-bezier(0.4, 0, 0.2, 1)';
-    grid.style.opacity = '0';
-    grid.style.transform = 'translateY(12px) scale(0.99)';
-
-    // 2. Após 220ms: troca o conteúdo e faz a entrada (350ms, cubic-bezier(0.16, 1, 0.3, 1))
-    filterTimeout = setTimeout(() => {
-      renderProducts(true);
-
-      // Force reflow before starting enter transition
-      void grid.offsetWidth;
-
-      grid.style.transition =
-        'opacity 350ms cubic-bezier(0.16, 1, 0.3, 1), transform 350ms cubic-bezier(0.16, 1, 0.3, 1)';
-      grid.style.opacity = '1';
-      grid.style.transform = 'translateY(0) scale(1)';
-    }, 220);
   }
 
   function renderProducts(fromFilter = false) {
@@ -112,26 +89,24 @@ const Products = (() => {
       : allProducts.filter(p => p.category_slug === currentFilter && !p.is_featured);
 
     if (filtered.length === 0) {
-      const emptyMsg = {
-        'pt-BR': 'Nenhum produto encontrado nesta categoria.',
-        'en': 'No products found in this category.',
-        'es': 'No se encontraron produtos en esta categoría.'
-      };
+      const emptyMsg = { 'pt-BR': 'Nenhum produto encontrado nesta categoria.', 'en': 'No products found in this category.', 'es': 'No se encontraron produtos en esta categoría.' };
       grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--color-gray-400);">
         <p style="font-size: var(--text-lg);">${emptyMsg[I18n.getLang()] || emptyMsg['pt-BR']}</p>
       </div>`;
       return;
     }
 
-    grid.innerHTML = filtered.map(product => {
+    grid.innerHTML = filtered.map((product, index) => {
       const name = product[`name${suffix}`] || product.name_pt;
       const desc = product[`description${suffix}`] || product.description_pt;
       const catName = product[`category_name${suffix}`] || product.category_name_pt || '';
       const shortDesc = desc.length > 120 ? desc.substring(0, 120) + '...' : desc;
       const btnLabel = { 'pt-BR': 'Ver Detalhes', 'en': 'View Details', 'es': 'Ver Detalles' };
+      const visibilityClass = fromFilter ? 'visible' : '';
+      const staggerStyle = fromFilter ? `style="transition-delay: ${Math.min(index * 45, 250)}ms;"` : '';
 
       return `
-        <div class="card reveal-scale ${fromFilter ? 'visible' : ''}" data-product-id="${product.id}">
+        <div class="card reveal-scale ${visibilityClass}" ${staggerStyle} data-product-id="${product.id}">
           ${product.discount_percent > 0 ? `<span class="card-badge">-${product.discount_percent}%</span>` : ''}
           ${product.is_featured ? `<span class="card-featured">⭐ Destaque</span>` : ''}
           <div class="card-image product-card-placeholder" ${product.image ? `style="background-image: url('${product.image}'); background-size: cover; background-position: center; color: transparent;"` : ''}>
@@ -149,8 +124,10 @@ const Products = (() => {
       `;
     }).join('');
 
-    // Re-init reveal animations for new elements
-    Animations.initRevealAnimations();
+    // Re-init reveal animations for any unrevealed elements
+    if (!fromFilter) {
+      Animations.initRevealAnimations();
+    }
   }
 
   function openModal(productId) {
@@ -219,7 +196,7 @@ const Products = (() => {
   async function refresh() {
     await fetchProducts();
     renderFilterTabs();
-    renderProducts(false);
+    renderProducts();
   }
 
   return { init, openModal, closeModal, initModal, refresh };

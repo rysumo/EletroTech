@@ -1,21 +1,14 @@
 /* =============================================
    ELETROTECH — Animations
-   Scroll Reveal (Optical Focus + Stagger),
-   O₂ Bubbles, Counters (easeOutExpo),
-   3D Tilt Parallax (LERP), Card Spotlight
+   Intersection Observer, Fluid Staggering,
+   Precision Counters, Organic Hero Bubbles
    ============================================= */
 
 const Animations = (() => {
-  const prefersReducedMotion = () =>
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   let revealObserver = null;
   let counterObserver = null;
-  let spotlightInitialized = false;
-  let tiltInitialized = false;
 
   function init() {
-    initHeroAura();
     initRevealAnimations();
     initBubbles();
     initCounters();
@@ -23,46 +16,45 @@ const Animations = (() => {
     initCardSpotlight();
   }
 
-  // Injects .hero-glow-aura into #hero if not already present in DOM
-  function initHeroAura() {
-    const hero = document.getElementById('hero');
-    if (!hero || hero.querySelector('.hero-glow-aura')) return;
-    const aura = document.createElement('div');
-    aura.className = 'hero-glow-aura';
-    aura.setAttribute('aria-hidden', 'true');
-    hero.insertBefore(aura, hero.firstChild);
+  // Check if reduced motion is requested
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  // 2. Scroll Reveal com "foco óptico" e stagger automático entre irmãos
+  // Scroll reveal animations
   function initRevealAnimations() {
-    const selector = '.reveal, .reveal-left, .reveal-right, .reveal-scale';
-    const reveals = document.querySelectorAll(selector);
+    const unrevealed = document.querySelectorAll(
+      '.reveal:not(.visible), .reveal-left:not(.visible), .reveal-right:not(.visible), .reveal-scale:not(.visible)'
+    );
+
+    if (unrevealed.length === 0) return;
 
     if (prefersReducedMotion()) {
-      reveals.forEach(el => el.classList.add('visible'));
+      unrevealed.forEach(el => el.classList.add('visible'));
       return;
     }
 
     if (!revealObserver) {
-      revealObserver = new IntersectionObserver((entries, obs) => {
+      revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const el = entry.target;
-            const parent = el.parentElement;
+            // Calculate natural stagger based on sibling position in grid/flex
+            const siblings = el.parentElement ? Array.from(el.parentElement.children) : [];
+            const siblingIndex = siblings.indexOf(el);
+            const staggerDelay = siblingIndex >= 0 && siblings.length > 1
+              ? Math.min(siblingIndex * 60, 320)
+              : 0;
 
-            if (parent) {
-              const siblings = Array.from(parent.children).filter(child =>
-                child.matches(selector)
-              );
-              if (siblings.length > 1) {
-                const idx = siblings.indexOf(el);
-                const delay = Math.min(Math.max(idx, 0) * 60, 320);
-                el.style.transitionDelay = `${delay}ms`;
-              }
+            if (staggerDelay > 0) {
+              setTimeout(() => {
+                el.classList.add('visible');
+              }, staggerDelay);
+            } else {
+              el.classList.add('visible');
             }
 
-            el.classList.add('visible');
-            obs.unobserve(el);
+            revealObserver.unobserve(el);
           }
         });
       }, {
@@ -71,214 +63,193 @@ const Animations = (() => {
       });
     }
 
-    reveals.forEach(el => {
-      if (!el.classList.contains('visible')) {
-        revealObserver.observe(el);
-      }
-    });
+    unrevealed.forEach(el => revealObserver.observe(el));
   }
 
-  // 3.3 Bolhas de O₂ (28 bolhas com oscilação lateral orgânica)
+  // Decorative O₂ bubbles in hero with organic hydrodynamic drift
   function initBubbles() {
     const container = document.getElementById('bubbles');
-    if (!container || prefersReducedMotion()) return;
+    if (!container) return;
+    if (prefersReducedMotion()) return;
 
-    container.innerHTML = '';
+    container.innerHTML = ''; // Prevent duplicates
+
     const count = 28;
-
     for (let i = 0; i < count; i++) {
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
+      const size = Math.floor(Math.random() * 26 + 8); // 8px to 34px
+      // Lateral sinusoidal sway amplitude (-36px to +36px)
+      const drift = (Math.random() * 28 + 12) * (Math.random() > 0.5 ? 1 : -1);
+      const duration = (Math.random() * 5 + 6.5).toFixed(1);
+      const delay = (Math.random() * 7).toFixed(1);
+      const opacity = (Math.random() * 0.45 + 0.45).toFixed(2);
 
-      const size = Math.random() * 26 + 8; // 8–34px
-      const left = Math.random() * 94 + 3; // 3–97%
-      const duration = Math.random() * 5 + 6.5; // 6.5–11.5s
-      const delay = Math.random() * 7; // 0–7s
-      const opacity = (Math.random() * 0.45 + 0.45).toFixed(2); // 0.45–0.90
-      const driftMagnitude = Math.random() * 28 + 12; // 12–40px
-      const driftSign = Math.random() < 0.5 ? -1 : 1;
-      const drift = (driftMagnitude * driftSign).toFixed(1);
-
-      bubble.style.width = `${size.toFixed(1)}px`;
-      bubble.style.height = `${size.toFixed(1)}px`;
-      bubble.style.left = `${left.toFixed(2)}%`;
-      bubble.style.animationDuration = `${duration.toFixed(2)}s`;
-      bubble.style.animationDelay = `${delay.toFixed(2)}s`;
-      bubble.style.setProperty('--drift', `${drift}px`);
-      bubble.style.setProperty('--bubble-opacity', opacity);
-
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${(Math.random() * 94 + 3).toFixed(1)}%`;
+      bubble.style.setProperty('--drift', `${drift.toFixed(1)}px`);
+      bubble.style.animationDuration = `${duration}s`;
+      bubble.style.animationDelay = `${delay}s`;
+      bubble.style.opacity = opacity;
       container.appendChild(bubble);
     }
   }
 
-  // 4. Tilt 3D com inércia LERP e flutuação senoidal contínua
-  function initTiltParallax() {
-    if (tiltInitialized || prefersReducedMotion()) return;
-
-    const hasFinePointer =
-      window.matchMedia && window.matchMedia('(pointer: fine)').matches;
-    if (!hasFinePointer && window.innerWidth < 992) return;
-
-    const configs = [
-      {
-        container: document.getElementById('hero'),
-        target: document.querySelector('.hero-image img'),
-        maxDeg: 10,
-        maxTranslate: 18
-      },
-      {
-        container: document.getElementById('featured'),
-        target: document.querySelector('.featured-image img'),
-        maxDeg: 9,
-        maxTranslate: 16
-      }
-    ].filter(item => item.container && item.target);
-
-    if (configs.length === 0) return;
-    tiltInitialized = true;
-
-    const states = configs.map(cfg => {
-      const state = {
-        ...cfg,
-        targetX: 0,
-        targetY: 0,
-        currentX: 0,
-        currentY: 0
-      };
-
-      cfg.container.addEventListener('pointermove', (e) => {
-        const rect = cfg.container.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        const nx = (e.clientX - rect.left) / rect.width - 0.5;
-        const ny = (e.clientY - rect.top) / rect.height - 0.5;
-        state.targetX = Math.max(-0.5, Math.min(0.5, nx));
-        state.targetY = Math.max(-0.5, Math.min(0.5, ny));
-      }, { passive: true });
-
-      cfg.container.addEventListener('pointerleave', () => {
-        state.targetX = 0;
-        state.targetY = 0;
-      }, { passive: true });
-
-      return state;
-    });
-
-    const lerpFactor = 0.08;
-
-    function tick(now) {
-      const floatY = Math.sin(now * 0.002) * 5;
-
-      for (let i = 0; i < states.length; i++) {
-        const s = states[i];
-        s.currentX += (s.targetX - s.currentX) * lerpFactor;
-        s.currentY += (s.targetY - s.currentY) * lerpFactor;
-
-        const tx = s.currentX * 2 * s.maxTranslate;
-        const ty = s.currentY * 2 * s.maxTranslate + floatY;
-        const rotY = s.currentX * 2 * s.maxDeg;
-        const rotX = -s.currentY * 2 * s.maxDeg;
-
-        s.target.style.transform =
-          `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) rotateY(${rotY.toFixed(2)}deg) rotateX(${rotX.toFixed(2)}deg)`;
-      }
-
-      requestAnimationFrame(tick);
-    }
-
-    requestAnimationFrame(tick);
-  }
-
-  // 5. Spotlight nos cards via delegação de eventos
-  function initCardSpotlight() {
-    if (spotlightInitialized || prefersReducedMotion()) return;
-    spotlightInitialized = true;
-
-    document.addEventListener('pointermove', (e) => {
-      const card = e.target.closest('.card, .service-card, .stat-card');
-      if (!card) return;
-
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      card.style.setProperty('--mouse-x', `${x.toFixed(1)}px`);
-      card.style.setProperty('--mouse-y', `${y.toFixed(1)}px`);
-    }, { passive: true });
-  }
-
-  // 7. Contadores de estatísticas com desaceleração easeOutExpo
+  // Animated counters with easeOutExpo curve
   function initCounters() {
-    const counters = document.querySelectorAll('.stat-value');
+    const counters = document.querySelectorAll('.stat-value:not(.counted)');
     if (counters.length === 0) return;
 
     if (prefersReducedMotion()) {
-      counters.forEach(el => {
-        const target = parseInt(el.dataset.value || el.textContent, 10) || 0;
-        const suffix = el.dataset.suffix || '';
-        el.textContent = `${target}${suffix}`;
-        el.dataset.counted = 'true';
+      counters.forEach(counter => {
+        const target = parseInt(counter.dataset.value || counter.textContent) || 0;
+        const suffix = counter.dataset.suffix || '';
+        counter.textContent = target + suffix;
+        counter.classList.add('counted');
       });
       return;
     }
 
     if (!counterObserver) {
-      counterObserver = new IntersectionObserver((entries, obs) => {
+      counterObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            const el = entry.target;
-            if (el.dataset.counted !== 'true') {
-              el.dataset.counted = 'true';
-              animateCounter(el);
-            }
-            obs.unobserve(el);
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
           }
         });
       }, { threshold: 0.25 });
     }
 
-    counters.forEach(counter => {
-      if (counter.dataset.counted !== 'true') {
-        counterObserver.observe(counter);
+    counters.forEach(counter => counterObserver.observe(counter));
+  }
+
+  // High-precision smooth counter using requestAnimationFrame & deceleration easing
+  function animateCounter(el) {
+    if (el.classList.contains('counted')) return;
+    el.classList.add('counted');
+
+    const target = parseInt(el.dataset.value || el.textContent) || 0;
+    const suffix = el.dataset.suffix || '';
+    const duration = 1800; // 1.8s
+    let startTime = null;
+
+    // Easing: easeOutExpo (fast start, silky-smooth finish)
+    function easeOutExpo(x) {
+      return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+    }
+
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = easeOutExpo(progress);
+      const current = Math.floor(eased * target);
+
+      if (progress < 1) {
+        el.textContent = current + suffix;
+        requestAnimationFrame(step);
+      } else {
+        el.textContent = target + suffix;
       }
+    }
+
+    el.textContent = '0' + suffix;
+    requestAnimationFrame(step);
+  }
+
+  // Interactive 3D tilt with LERP spring interpolation (inspired by Quadrangular & modern agency standards)
+  function initTiltParallax() {
+    if (prefersReducedMotion()) return;
+    if (!window.matchMedia('(pointer: fine)').matches && window.innerWidth < 992) return;
+
+    const items = [
+      {
+        container: document.getElementById('hero'),
+        element: document.querySelector('.hero-image img'),
+        maxDeg: 10,
+        maxTranslate: 18
+      },
+      {
+        container: document.getElementById('featured'),
+        element: document.querySelector('.featured-image img'),
+        maxDeg: 9,
+        maxTranslate: 16
+      }
+    ];
+
+    items.forEach(({ container, element, maxDeg, maxTranslate }) => {
+      if (!container || !element) return;
+
+      let targetX = 0, targetY = 0;
+      let currentX = 0, currentY = 0;
+      let isHovering = false;
+      let rafId = null;
+
+      container.addEventListener('pointermove', (e) => {
+        const rect = container.getBoundingClientRect();
+        // Normalized -0.5 to 0.5
+        const normX = (e.clientX - rect.left) / rect.width - 0.5;
+        const normY = (e.clientY - rect.top) / rect.height - 0.5;
+        targetX = Math.max(-0.5, Math.min(0.5, normX));
+        targetY = Math.max(-0.5, Math.min(0.5, normY));
+        isHovering = true;
+        if (!rafId) rafId = requestAnimationFrame(update);
+      }, { passive: true });
+
+      container.addEventListener('pointerleave', () => {
+        targetX = 0;
+        targetY = 0;
+        isHovering = false;
+      });
+
+      function update(time) {
+        // LERP interpolation
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+
+        // Subtle ambient float combined with pointer tilt
+        const ambientY = Math.sin(time * 0.002) * 5;
+
+        const posX = (currentX * maxTranslate).toFixed(2);
+        const posY = (currentY * maxTranslate + ambientY).toFixed(2);
+        const rotY = (currentX * maxDeg).toFixed(2);
+        const rotX = (-currentY * maxDeg).toFixed(2);
+
+        element.style.transform = `translate3d(${posX}px, ${posY}px, 0) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+
+        rafId = requestAnimationFrame(update);
+      }
+
+      rafId = requestAnimationFrame(update);
     });
   }
 
-  function animateCounter(el) {
-    const target = parseInt(el.dataset.value || el.textContent, 10) || 0;
-    const suffix = el.dataset.suffix || '';
-    const duration = 1800;
+  // Dynamic card spotlight tracking pointer coordinates (--mouse-x, --mouse-y)
+  function initCardSpotlight() {
+    if (prefersReducedMotion()) return;
 
-    if (prefersReducedMotion() || target === 0) {
-      el.textContent = `${target}${suffix}`;
-      return;
-    }
+    // Use event delegation on document so static and dynamically rendered cards both receive spotlight
+    document.addEventListener('pointermove', (e) => {
+      const card = e.target.closest('.card, .service-card, .stat-card');
+      if (!card) return;
 
-    const startTime = performance.now();
-    el.textContent = `0${suffix}`;
+      const rect = card.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
 
-    function update(now) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo: 1 - 2^(-10x)
-      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const current = Math.floor(eased * target);
-
-      el.textContent = `${current}${suffix}`;
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        el.textContent = `${target}${suffix}`;
-      }
-    }
-
-    requestAnimationFrame(update);
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    }, { passive: true });
   }
 
   return {
     init,
     initRevealAnimations,
     initCounters,
-    animateCounter
+    animateCounter,
+    initBubbles,
+    initTiltParallax,
+    initCardSpotlight
   };
 })();

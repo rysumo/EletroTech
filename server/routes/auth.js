@@ -1,8 +1,6 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { getDb, saveDb } = require('../db/database');
-const { JWT_SECRET, authMiddleware } = require('../middleware/auth');
+const { supabase } = require('../db/supabase');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -15,33 +13,39 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
     }
 
-    const db = await getDb();
-    const result = db.exec("SELECT * FROM admin_users WHERE username = ?", [username]);
+    // Support both direct email or username (auto-append domain if needed)
+    let email = username.trim();
+    let authRes = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (result.length === 0 || result[0].values.length === 0) {
+    if (authRes.error && !email.includes('@')) {
+      // Try with default domain if username was entered without @
+      authRes = await supabase.auth.signInWithPassword({
+        email: `${email}@eletrotech.com`,
+        password,
+      });
+    }
+
+    if (authRes.error || !authRes.data.session) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const row = result[0].values[0];
-    const columns = result[0].columns;
-    const user = {};
-    columns.forEach((col, i) => { user[col] = row[i]; });
+    const user = authRes.data.user;
+    const token = authRes.data.session.access_token;
 
-    const isValid = bcrypt.compareSync(password, user.password);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({ token, user: { id: user.id, username: user.username } });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.email ? user.email.split('@')[0] : 'admin',
+        email: user.email
+      }
+    });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno ao realizar login' });
   }
 });
 
@@ -53,26 +57,25 @@ router.get('/verify', authMiddleware, (req, res) => {
 // PUT /api/auth/change-password
 router.put('/change-password', authMiddleware, async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-    const db = await getDb();
-
-    const result = db.exec("SELECT * FROM admin_users WHERE id = ?", [req.user.id]);
-    if (result.length === 0 || result[0].values.length === 0) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres' });
     }
 
-    const row = result[0].values[0];
-    const columns = result[0].columns;
-    const user = {};
-    columns.forEach((col, i) => { user[col] = row[i]; });
+    // In Supabase, password updates can be done using updateUser
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.split(' ')[1] : null;
 
-    if (!bcrypt.compareSync(currentPassword, user.password)) {
-      return res.status(401).json({ error: 'Senha atual incorreta' });
+    if (!token) {
+      return res.status(401).json({ error: 'Não autorizado' });
     }
 
-    const hash = bcrypt.hashSync(newPassword, 10);
-    db.run("UPDATE admin_users SET password = ? WHERE id = ?", [hash, req.user.id]);
-    saveDb();
+    // Use user-scoped client or service role to update password
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
 
     res.json({ message: 'Senha alterada com sucesso' });
   } catch (err) {

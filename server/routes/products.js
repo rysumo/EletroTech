@@ -1,28 +1,14 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-const { getDb, saveDb } = require('../db/database');
+const { supabase } = require('../db/supabase');
 const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Configure multer for product image uploads
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Memory storage for serverless compatibility
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp|gif/;
@@ -36,40 +22,62 @@ const upload = multer({
   }
 });
 
-// Helper to convert sql.js result to array of objects
-function resultToObjects(result) {
-  if (!result || result.length === 0 || result[0].values.length === 0) return [];
-  const columns = result[0].columns;
-  return result[0].values.map(row => {
-    const obj = {};
-    columns.forEach((col, i) => { obj[col] = row[i]; });
-    return obj;
-  });
+// Helper to format product with flattened category info
+function formatProduct(p) {
+  if (!p) return null;
+  return {
+    ...p,
+    category_name_pt: p.categories?.name_pt || null,
+    category_name_en: p.categories?.name_en || null,
+    category_name_es: p.categories?.name_es || null,
+    category_slug: p.categories?.slug || null,
+  };
+}
+
+// Upload buffer to Supabase Storage bucket
+async function uploadToSupabaseStorage(file) {
+  if (!file) return null;
+  const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+  const fileName = `product-${Date.now()}-${Math.round(Math.random() * 1E6)}${ext}`;
+
+  const { data, error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file.buffer, {
+      contentType: file.mimetype,
+      upsert: true
+    });
+
+  if (error) {
+    console.warn('Storage upload warning:', error.message);
+    return null;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(data.path);
+
+  return urlData.publicUrl;
 }
 
 // GET /api/products — List all active products (public)
 router.get('/', async (req, res) => {
   try {
-    const db = await getDb();
     const { category } = req.query;
 
-    let query = `
-      SELECT p.*, c.name_pt as category_name_pt, c.name_en as category_name_en, c.name_es as category_name_es, c.slug as category_slug
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.is_active = 1
-    `;
-    const params = [];
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories (name_pt, name_en, name_es, slug)')
+      .eq('is_active', true)
+      .order('is_featured', { ascending: false })
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+
+    let products = (data || []).map(formatProduct);
 
     if (category) {
-      query += ' AND c.slug = ?';
-      params.push(category);
+      products = products.filter(p => p.category_slug === category);
     }
-
-    query += ' ORDER BY p.is_featured DESC, p.sort_order ASC';
-
-    const result = db.exec(query, params);
-    const products = resultToObjects(result);
 
     res.json(products);
   } catch (err) {
@@ -81,14 +89,13 @@ router.get('/', async (req, res) => {
 // GET /api/products/all — List ALL products including inactive (admin)
 router.get('/all', authMiddleware, async (req, res) => {
   try {
-    const db = await getDb();
-    const result = db.exec(`
-      SELECT p.*, c.name_pt as category_name_pt, c.slug as category_slug
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      ORDER BY p.sort_order ASC
-    `);
-    res.json(resultToObjects(result));
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories (name_pt, name_en, name_es, slug)')
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    res.json((data || []).map(formatProduct));
   } catch (err) {
     console.error('Get all products error:', err);
     res.status(500).json({ error: 'Erro ao buscar produtos' });
@@ -98,20 +105,18 @@ router.get('/all', authMiddleware, async (req, res) => {
 // GET /api/products/:id — Get single product (public)
 router.get('/:id', async (req, res) => {
   try {
-    const db = await getDb();
-    const result = db.exec(`
-      SELECT p.*, c.name_pt as category_name_pt, c.name_en as category_name_en, c.name_es as category_name_es, c.slug as category_slug
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.id = ?
-    `, [parseInt(req.params.id)]);
+    const id = parseInt(req.params.id, 10);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories (name_pt, name_en, name_es, slug)')
+      .eq('id', id)
+      .single();
 
-    const products = resultToObjects(result);
-    if (products.length === 0) {
+    if (error || !data) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
 
-    res.json(products[0]);
+    res.json(formatProduct(data));
   } catch (err) {
     console.error('Get product error:', err);
     res.status(500).json({ error: 'Erro ao buscar produto' });
@@ -121,28 +126,40 @@ router.get('/:id', async (req, res) => {
 // POST /api/products — Create product (admin)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    const db = await getDb();
     const data = req.body;
-    const image = req.file ? '/uploads/' + req.file.filename : null;
+    let image = data.image || null;
 
-    db.run(`INSERT INTO products 
-      (category_id, name_pt, name_en, name_es, description_pt, description_en, description_es, features_pt, features_en, features_es, image, is_featured, discount_percent, whatsapp_message_pt, whatsapp_message_en, whatsapp_message_es, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        parseInt(data.category_id) || null,
-        data.name_pt || '', data.name_en || '', data.name_es || '',
-        data.description_pt || '', data.description_en || '', data.description_es || '',
-        data.features_pt || '', data.features_en || '', data.features_es || '',
+    if (req.file) {
+      const uploadedUrl = await uploadToSupabaseStorage(req.file);
+      if (uploadedUrl) image = uploadedUrl;
+    }
+
+    const { data: created, error } = await supabase
+      .from('products')
+      .insert([{
+        category_id: parseInt(data.category_id, 10) || null,
+        name_pt: data.name_pt || '',
+        name_en: data.name_en || '',
+        name_es: data.name_es || '',
+        description_pt: data.description_pt || '',
+        description_en: data.description_en || '',
+        description_es: data.description_es || '',
+        features_pt: data.features_pt || '',
+        features_en: data.features_en || '',
+        features_es: data.features_es || '',
         image,
-        data.is_featured === 'true' || data.is_featured === '1' ? 1 : 0,
-        parseInt(data.discount_percent) || 0,
-        data.whatsapp_message_pt || '', data.whatsapp_message_en || '', data.whatsapp_message_es || '',
-        parseInt(data.sort_order) || 0
-      ]
-    );
-    saveDb();
+        is_featured: data.is_featured === 'true' || data.is_featured === '1' || data.is_featured === true,
+        discount_percent: parseInt(data.discount_percent, 10) || 0,
+        whatsapp_message_pt: data.whatsapp_message_pt || '',
+        whatsapp_message_en: data.whatsapp_message_en || '',
+        whatsapp_message_es: data.whatsapp_message_es || '',
+        sort_order: parseInt(data.sort_order, 10) || 0,
+        is_active: data.is_active === 'false' || data.is_active === '0' || data.is_active === false ? false : true
+      }])
+      .select();
 
-    res.status(201).json({ message: 'Produto criado com sucesso' });
+    if (error) throw error;
+    res.status(201).json({ message: 'Produto criado com sucesso', data: created?.[0] });
   } catch (err) {
     console.error('Create product error:', err);
     res.status(500).json({ error: 'Erro ao criar produto' });
@@ -152,39 +169,41 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
 // PUT /api/products/:id — Update product (admin)
 router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    const db = await getDb();
+    const id = parseInt(req.params.id, 10);
     const data = req.body;
-    const id = parseInt(req.params.id);
+    let image = data.existing_image || data.image || null;
 
-    let image = data.existing_image || null;
     if (req.file) {
-      image = '/uploads/' + req.file.filename;
+      const uploadedUrl = await uploadToSupabaseStorage(req.file);
+      if (uploadedUrl) image = uploadedUrl;
     }
 
-    db.run(`UPDATE products SET
-      category_id = ?, name_pt = ?, name_en = ?, name_es = ?,
-      description_pt = ?, description_en = ?, description_es = ?,
-      features_pt = ?, features_en = ?, features_es = ?,
-      image = ?, is_featured = ?, discount_percent = ?,
-      whatsapp_message_pt = ?, whatsapp_message_en = ?, whatsapp_message_es = ?,
-      sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?`,
-      [
-        parseInt(data.category_id) || null,
-        data.name_pt || '', data.name_en || '', data.name_es || '',
-        data.description_pt || '', data.description_en || '', data.description_es || '',
-        data.features_pt || '', data.features_en || '', data.features_es || '',
+    const { error } = await supabase
+      .from('products')
+      .update({
+        category_id: parseInt(data.category_id, 10) || null,
+        name_pt: data.name_pt || '',
+        name_en: data.name_en || '',
+        name_es: data.name_es || '',
+        description_pt: data.description_pt || '',
+        description_en: data.description_en || '',
+        description_es: data.description_es || '',
+        features_pt: data.features_pt || '',
+        features_en: data.features_en || '',
+        features_es: data.features_es || '',
         image,
-        data.is_featured === 'true' || data.is_featured === '1' ? 1 : 0,
-        parseInt(data.discount_percent) || 0,
-        data.whatsapp_message_pt || '', data.whatsapp_message_en || '', data.whatsapp_message_es || '',
-        parseInt(data.sort_order) || 0,
-        data.is_active === 'false' || data.is_active === '0' ? 0 : 1,
-        id
-      ]
-    );
-    saveDb();
+        is_featured: data.is_featured === 'true' || data.is_featured === '1' || data.is_featured === true,
+        discount_percent: parseInt(data.discount_percent, 10) || 0,
+        whatsapp_message_pt: data.whatsapp_message_pt || '',
+        whatsapp_message_en: data.whatsapp_message_en || '',
+        whatsapp_message_es: data.whatsapp_message_es || '',
+        sort_order: parseInt(data.sort_order, 10) || 0,
+        is_active: data.is_active === 'false' || data.is_active === '0' || data.is_active === false ? false : true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
 
+    if (error) throw error;
     res.json({ message: 'Produto atualizado com sucesso' });
   } catch (err) {
     console.error('Update product error:', err);
@@ -195,9 +214,13 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
 // DELETE /api/products/:id — Delete product (admin)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const db = await getDb();
-    db.run("DELETE FROM products WHERE id = ?", [parseInt(req.params.id)]);
-    saveDb();
+    const id = parseInt(req.params.id, 10);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
     res.json({ message: 'Produto removido com sucesso' });
   } catch (err) {
     console.error('Delete product error:', err);

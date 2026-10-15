@@ -170,63 +170,82 @@ strong { font-weight: 700; }
 }
 
 /* =============================================
-   Scroll Reveal com "Foco Óptico"
+   ANIMATION BASE CLASSES & REVEAL SYSTEM
+   Cinematic Focus, Hardware-accelerated, Easing
    ============================================= */
-.reveal,
-.reveal-left,
-.reveal-right,
-.reveal-scale {
-  opacity: 0;
-  filter: blur(5px);
-  will-change: opacity, transform, filter;
-  transition:
-    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .reveal {
+  opacity: 0;
   transform: translateY(28px) scale(0.98);
+  filter: blur(5px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
 }
 
-.reveal-left {
-  transform: translateX(-32px) scale(0.98);
-}
-
-.reveal-right {
-  transform: translateX(32px) scale(0.98);
-}
-
-.reveal-scale {
-  transform: scale(0.94) translateY(18px);
-}
-
-.reveal.visible,
-.reveal-left.visible,
-.reveal-right.visible,
-.reveal-scale.visible {
+.reveal.visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: translateY(0) scale(1);
   filter: blur(0);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px) scale(0.98);
+  filter: blur(5px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
 
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  filter: blur(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(32px) scale(0.98);
+  filter: blur(5px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  filter: blur(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.94) translateY(18px);
+  filter: blur(5px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  filter: blur(0);
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
   .reveal,
   .reveal-left,
   .reveal-right,
-  .reveal-scale,
-  .reveal.visible,
-  .reveal-left.visible,
-  .reveal-right.visible,
-  .reveal-scale.visible {
+  .reveal-scale {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
     transition: none !important;
-    will-change: auto !important;
   }
 }

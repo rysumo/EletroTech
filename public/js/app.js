@@ -88,6 +88,7 @@ const App = (() => {
     }).join('');
 
     Animations.initRevealAnimations();
+    // Trigger smooth counter animations for newly rendered elements
     Animations.initCounters();
   }
 
