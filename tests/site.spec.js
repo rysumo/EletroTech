@@ -115,6 +115,15 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     const webSite = graph.find(item => item['@type'] === 'WebSite');
     expect(webSite).toBeDefined();
     expect(webSite.name).toBe('Eletrotech');
+
+    // Valida entidade Product e Offer para conformidade com Google Rich Results
+    const product = graph.find(item => item['@type'] === 'Product');
+    expect(product).toBeDefined();
+    expect(product.offers).toBeDefined();
+    expect(product.offers.price).toBe('3500.00');
+    expect(product.offers.priceCurrency).toBe('BRL');
+    expect(product.aggregateRating).toBeDefined();
+    expect(product.review).toBeDefined();
   });
 
   test('deve servir robots.txt e sitemap.xml publicamente', async ({ request }) => {
@@ -175,5 +184,81 @@ test.describe('Eletrotech - Painel Administrativo (Enterprise Architecture)', ()
     // Deve exibir o painel administrativo
     await expect(page.locator('#admin-dashboard')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#admin-user-name')).toContainText('admin');
+  });
+
+  test('deve navegar entre todas as seções do painel administrativo (Produtos, Categorias, FAQ, Serviços, Estatísticas, Configurações)', async ({ page }) => {
+    await page.goto(`${BASE_URL}/admin`);
+    await page.fill('#login-username', 'admin');
+    await page.fill('#login-password', 'admin123');
+    await page.click('#login-btn');
+    await expect(page.locator('#admin-dashboard')).toBeVisible({ timeout: 5000 });
+
+    // 1. Produtos (seção padrão)
+    await expect(page.locator('#section-products')).toBeVisible();
+    await expect(page.locator('#products-table')).toBeVisible();
+
+    // 2. Categorias
+    await page.click('.sidebar-link[data-section="categories"]');
+    await expect(page.locator('#section-categories')).toBeVisible();
+    await expect(page.locator('#categories-table')).toBeVisible();
+    await expect(page.locator('#btn-add-category')).toBeVisible();
+
+    // 3. FAQ
+    await page.click('.sidebar-link[data-section="faq"]');
+    await expect(page.locator('#section-faq')).toBeVisible();
+    await expect(page.locator('#faq-table')).toBeVisible();
+
+    // 4. Serviços
+    await page.click('.sidebar-link[data-section="services"]');
+    await expect(page.locator('#section-services')).toBeVisible();
+    await expect(page.locator('#services-table')).toBeVisible();
+
+    // 5. Estatísticas
+    await page.click('.sidebar-link[data-section="stats"]');
+    await expect(page.locator('#section-stats')).toBeVisible();
+    await expect(page.locator('#stats-table')).toBeVisible();
+    await expect(page.locator('#btn-add-stat')).toBeVisible();
+
+    // 6. Configurações
+    await page.click('.sidebar-link[data-section="settings"]');
+    await expect(page.locator('#section-settings')).toBeVisible();
+    await expect(page.locator('#site-settings-form')).toBeVisible();
+    await expect(page.locator('#setting-whatsapp_number')).toBeVisible();
+    await expect(page.locator('#setting-phone_display')).toBeVisible();
+    await expect(page.locator('#change-password-form')).toBeVisible();
+  });
+
+  test('deve abrir e fechar modais de cadastro de categorias e estatísticas', async ({ page }) => {
+    await page.goto(`${BASE_URL}/admin`);
+    await page.fill('#login-username', 'admin');
+    await page.fill('#login-password', 'admin123');
+    await page.click('#login-btn');
+    await expect(page.locator('#admin-dashboard')).toBeVisible({ timeout: 5000 });
+
+    // Testa modal de categoria
+    await page.click('.sidebar-link[data-section="categories"]');
+    await page.click('#btn-add-category');
+    await expect(page.locator('#category-form-modal')).toHaveClass(/active/);
+    await page.click('#category-form-close');
+    await expect(page.locator('#category-form-modal')).not.toHaveClass(/active/);
+
+    // Testa modal de estatística
+    await page.click('.sidebar-link[data-section="stats"]');
+    await page.click('#btn-add-stat');
+    await expect(page.locator('#stat-form-modal')).toHaveClass(/active/);
+    await page.click('#stat-form-cancel');
+    await expect(page.locator('#stat-form-modal')).not.toHaveClass(/active/);
+  });
+
+  test('deve responder endpoints públicos de settings e stats via API', async ({ request }) => {
+    const settingsRes = await request.get(`${BASE_URL}/api/settings`);
+    expect(settingsRes.status()).toBe(200);
+    const settings = await settingsRes.json();
+    expect(settings.whatsapp_number).toBeDefined();
+
+    const statsRes = await request.get(`${BASE_URL}/api/stats`);
+    expect(statsRes.status()).toBe(200);
+    const stats = await statsRes.json();
+    expect(Array.isArray(stats)).toBe(true);
   });
 });

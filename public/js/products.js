@@ -168,7 +168,10 @@ const Products = (() => {
       `<div class="modal-feature-item"><span>${f.trim()}</span></div>`
     ).join('');
 
-    const whatsappLink = `https://wa.me/5545999241306?text=${encodeURIComponent(whatsappMsg)}`;
+    const rawNumber = typeof SiteSettings !== 'undefined' ? SiteSettings.get('whatsapp_number', '45999241306') : '45999241306';
+    const cleanNumber = String(rawNumber).replace(/\D/g, '');
+    const fullNumber = cleanNumber.startsWith('55') ? cleanNumber : `55${cleanNumber}`;
+    const whatsappLink = `https://wa.me/${fullNumber}?text=${encodeURIComponent(whatsappMsg)}`;
     document.getElementById('modal-whatsapp').href = whatsappLink;
 
     // Show modal

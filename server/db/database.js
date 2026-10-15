@@ -21,6 +21,7 @@ async function getDb() {
 
   db.run('PRAGMA foreign_keys = ON');
   initTables();
+  runMigrations();
   saveDb();
   return db;
 }
@@ -54,7 +55,10 @@ function initTables() {
       name_es TEXT,
       slug TEXT UNIQUE NOT NULL,
       icon TEXT,
-      sort_order INTEGER DEFAULT 0
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -96,7 +100,9 @@ function initTables() {
       description_es TEXT,
       icon TEXT,
       sort_order INTEGER DEFAULT 0,
-      is_active INTEGER DEFAULT 1
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -110,7 +116,9 @@ function initTables() {
       answer_en TEXT,
       answer_es TEXT,
       sort_order INTEGER DEFAULT 0,
-      is_active INTEGER DEFAULT 1
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -123,7 +131,18 @@ function initTables() {
       value TEXT NOT NULL,
       suffix TEXT DEFAULT '%',
       icon TEXT,
-      sort_order INTEGER DEFAULT 0
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -136,6 +155,58 @@ function initTables() {
     }
   } catch (e) {
     console.error('Error seeding admin user into SQLite:', e);
+  }
+}
+
+function columnExists(table, column) {
+  try {
+    const res = db.exec(`PRAGMA table_info(${table})`);
+    if (!res.length) return false;
+    return res[0].values.some(row => row[1] === column);
+  } catch {
+    return false;
+  }
+}
+
+function addColumnIfMissing(table, column, definition) {
+  if (!columnExists(table, column)) {
+    try {
+      db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    } catch (err) {
+      console.warn(`Migration addColumnIfMissing ${table}.${column}:`, err.message);
+    }
+  }
+}
+
+function runMigrations() {
+  addColumnIfMissing('categories', 'is_active', 'INTEGER DEFAULT 1');
+  addColumnIfMissing('categories', 'created_at', 'DATETIME');
+  addColumnIfMissing('categories', 'updated_at', 'DATETIME');
+  addColumnIfMissing('services', 'created_at', 'DATETIME');
+  addColumnIfMissing('services', 'updated_at', 'DATETIME');
+  addColumnIfMissing('faq', 'created_at', 'DATETIME');
+  addColumnIfMissing('faq', 'updated_at', 'DATETIME');
+  addColumnIfMissing('efficiency_stats', 'is_active', 'INTEGER DEFAULT 1');
+  addColumnIfMissing('efficiency_stats', 'created_at', 'DATETIME');
+  addColumnIfMissing('efficiency_stats', 'updated_at', 'DATETIME');
+
+  try {
+    const defaultSettings = {
+      whatsapp_number: '45999241306',
+      phone_display: '(45) 99924-1306',
+      email: 'contato@eletrotech.com.br',
+      instagram_handle: '@eletrotechmarechal',
+      instagram_url: 'https://instagram.com/eletrotechmarechal',
+      founded_year: '2018',
+    };
+    Object.entries(defaultSettings).forEach(([key, value]) => {
+      const existing = db.exec("SELECT key FROM settings WHERE key = ?", [key]);
+      if (existing.length === 0 || existing[0].values.length === 0) {
+        db.run("INSERT INTO settings (key, value) VALUES (?, ?)", [key, value]);
+      }
+    });
+  } catch (e) {
+    console.warn('Error seeding default settings:', e.message);
   }
 }
 

@@ -15,43 +15,19 @@ const AdminApp = (() => {
   }
 
   async function login(username, password) {
-    const errorEl = document.getElementById('login-error');
-    errorEl.textContent = '';
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Entrando...';
-    }
-
     try {
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
-      const contentType = res.headers.get('content-type') || '';
-      let data = {};
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(res.status === 404
-          ? 'Serviço de autenticação temporariamente indisponível (404).'
-          : `Erro de comunicação com o servidor (${res.status})`);
-      }
-
-      if (!res.ok) throw new Error(data.error || 'Credenciais inválidas');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
       token = data.token;
       localStorage.setItem('eletrotech-admin-token', token);
       showDashboard(data.user);
     } catch (err) {
-      errorEl.textContent = err.message || 'Erro ao fazer login';
-    } finally {
-      if (loginBtn) {
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Entrar';
-      }
+      document.getElementById('login-error').textContent = err.message || 'Erro ao fazer login';
     }
   }
 
@@ -60,8 +36,6 @@ const AdminApp = (() => {
     try {
       const res = await fetch(`${API}/auth/verify`, { headers: authHeaders() });
       if (!res.ok) throw new Error();
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return false;
       const data = await res.json();
       return data.valid ? data.user : false;
     } catch {
@@ -76,49 +50,44 @@ const AdminApp = (() => {
     localStorage.removeItem('eletrotech-admin-token');
     document.getElementById('admin-dashboard').style.display = 'none';
     document.getElementById('admin-login').style.display = '';
-    if (window.location.hash) {
-      window.history.replaceState(null, '', '/admin');
-    }
   }
 
   function showDashboard(user) {
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-dashboard').style.display = 'flex';
     document.getElementById('admin-user-name').textContent = user.username;
+    loadProducts();
+    loadCategoriesSelect();
 
-    const hash = window.location.hash.replace('#', '');
-    if (['products', 'faq', 'services', 'settings'].includes(hash)) {
-      switchSection(hash);
-    } else {
-      loadProducts();
-      loadCategories();
+    const initialSection = window.location.hash ? window.location.hash.substring(1) : 'products';
+    if (['products', 'categories', 'faq', 'services', 'stats', 'settings'].includes(initialSection)) {
+      switchSection(initialSection);
     }
   }
 
   // ============================
   // PRODUCTS
   // ============================
-  async function loadCategories() {
+  async function loadCategoriesSelect() {
     try {
-      const res = await fetch(`${API}/categories`);
-      if (!res.ok) return;
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return;
+      // Uses /all (admin-only) so products can still be reassigned even from
+      // categories that were deactivated rather than deleted.
+      const res = await fetch(`${API}/categories/all`, { headers: authHeaders() });
       categories = await res.json();
       const select = document.getElementById('product-category');
-      select.innerHTML = '<option value="">Sem categoria</option>' +
-        categories.map(c => `<option value="${c.id}">${c.name_pt}</option>`).join('');
+      if (select) {
+        select.innerHTML = '<option value="">Sem categoria</option>' +
+          categories.map(c => `<option value="${c.id}">${c.name_pt}${c.is_active ? '' : ' (inativa)'}</option>`).join('');
+      }
     } catch (err) { console.error(err); }
   }
 
   async function loadProducts() {
     try {
       const res = await fetch(`${API}/products/all`, { headers: authHeaders() });
-      if (!res.ok) return;
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return;
       const products = await res.json();
       const tbody = document.getElementById('products-tbody');
+      if (!tbody) return;
       tbody.innerHTML = products.map(p => `
         <tr>
           <td>${p.id}</td>
@@ -128,12 +97,8 @@ const AdminApp = (() => {
           <td>${p.discount_percent > 0 ? p.discount_percent + '%' : '-'}</td>
           <td><span class="badge-active ${p.is_active ? 'badge-yes' : 'badge-no'}">${p.is_active ? 'Sim' : 'Não'}</span></td>
           <td class="actions">
-            <button class="btn-action btn-edit" onclick="AdminApp.editProduct(${p.id})">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar
-            </button>
-            <button class="btn-action btn-delete" onclick="AdminApp.deleteProduct(${p.id})" title="Excluir">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </button>
+            <button class="btn-action btn-edit" onclick="AdminApp.editProduct(${p.id})">✏️ Editar</button>
+            <button class="btn-action btn-delete" onclick="AdminApp.deleteProduct(${p.id})">🗑️</button>
           </td>
         </tr>
       `).join('');
@@ -230,16 +195,99 @@ const AdminApp = (() => {
   }
 
   // ============================
+  // CATEGORIES
+  // ============================
+  async function loadCategoriesTable() {
+    try {
+      const res = await fetch(`${API}/categories/all`, { headers: authHeaders() });
+      const cats = await res.json();
+      const tbody = document.getElementById('categories-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = cats.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td>${c.icon || '-'}</td>
+          <td>${c.name_pt}</td>
+          <td>${c.slug}</td>
+          <td>${c.sort_order}</td>
+          <td><span class="badge-active ${c.is_active ? 'badge-yes' : 'badge-no'}">${c.is_active ? 'Sim' : 'Não'}</span></td>
+          <td class="actions">
+            <button class="btn-action btn-edit" onclick="AdminApp.editCategory(${c.id}, '${encodeURIComponent(JSON.stringify(c))}')">✏️ Editar</button>
+            <button class="btn-action btn-delete" onclick="AdminApp.deleteCategory(${c.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  function openCategoryForm(category = null) {
+    const modal = document.getElementById('category-form-modal');
+    document.getElementById('category-form-title').textContent = category ? 'Editar Categoria' : 'Nova Categoria';
+    document.getElementById('category-form').reset();
+    document.getElementById('category-id').value = category ? category.id : '';
+
+    if (category) {
+      document.getElementById('category-icon').value = category.icon || '';
+      document.getElementById('category-name-pt').value = category.name_pt || '';
+      document.getElementById('category-name-en').value = category.name_en || '';
+      document.getElementById('category-name-es').value = category.name_es || '';
+      document.getElementById('category-slug').value = category.slug || '';
+      document.getElementById('category-sort').value = category.sort_order || 0;
+      document.getElementById('category-active').checked = category.is_active !== 0;
+    }
+    modal.classList.add('active');
+  }
+
+  function editCategory(id, encodedData) {
+    const category = JSON.parse(decodeURIComponent(encodedData));
+    openCategoryForm(category);
+  }
+
+  async function saveCategory(e) {
+    e.preventDefault();
+    const id = document.getElementById('category-id').value;
+    const body = {
+      icon: document.getElementById('category-icon').value,
+      name_pt: document.getElementById('category-name-pt').value,
+      name_en: document.getElementById('category-name-en').value,
+      name_es: document.getElementById('category-name-es').value,
+      slug: document.getElementById('category-slug').value.trim().toLowerCase(),
+      sort_order: document.getElementById('category-sort').value,
+      is_active: document.getElementById('category-active').checked ? '1' : '0',
+    };
+
+    try {
+      const url = id ? `${API}/categories/${id}` : `${API}/categories`;
+      const method = id ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar categoria');
+      closeModal('category-form-modal');
+      loadCategoriesTable();
+      loadCategoriesSelect();
+    } catch (err) { alert(err.message); }
+  }
+
+  async function deleteCategory(id) {
+    if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
+    try {
+      const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao remover categoria');
+      loadCategoriesTable();
+      loadCategoriesSelect();
+    } catch (err) { alert(err.message); }
+  }
+
+  // ============================
   // FAQ
   // ============================
   async function loadFaq() {
     try {
       const res = await fetch(`${API}/faq/all`, { headers: authHeaders() });
-      if (!res.ok) return;
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return;
       const faqs = await res.json();
       const tbody = document.getElementById('faq-tbody');
+      if (!tbody) return;
       tbody.innerHTML = faqs.map(f => `
         <tr>
           <td>${f.id}</td>
@@ -247,12 +295,8 @@ const AdminApp = (() => {
           <td>${f.sort_order}</td>
           <td><span class="badge-active ${f.is_active ? 'badge-yes' : 'badge-no'}">${f.is_active ? 'Sim' : 'Não'}</span></td>
           <td class="actions">
-            <button class="btn-action btn-edit" onclick="AdminApp.editFaq(${f.id}, '${encodeURIComponent(JSON.stringify(f))}')">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar
-            </button>
-            <button class="btn-action btn-delete" onclick="AdminApp.deleteFaq(${f.id})" title="Excluir">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </button>
+            <button class="btn-action btn-edit" onclick="AdminApp.editFaq(${f.id}, '${encodeURIComponent(JSON.stringify(f))}')">✏️ Editar</button>
+            <button class="btn-action btn-delete" onclick="AdminApp.deleteFaq(${f.id})">🗑️</button>
           </td>
         </tr>
       `).join('');
@@ -318,11 +362,9 @@ const AdminApp = (() => {
   async function loadServices() {
     try {
       const res = await fetch(`${API}/services/all`, { headers: authHeaders() });
-      if (!res.ok) return;
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return;
       const services = await res.json();
       const tbody = document.getElementById('services-tbody');
+      if (!tbody) return;
       tbody.innerHTML = services.map(s => `
         <tr>
           <td>${s.id}</td>
@@ -331,12 +373,8 @@ const AdminApp = (() => {
           <td>${s.sort_order}</td>
           <td><span class="badge-active ${s.is_active ? 'badge-yes' : 'badge-no'}">${s.is_active ? 'Sim' : 'Não'}</span></td>
           <td class="actions">
-            <button class="btn-action btn-edit" onclick="AdminApp.editService(${s.id}, '${encodeURIComponent(JSON.stringify(s))}')">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar
-            </button>
-            <button class="btn-action btn-delete" onclick="AdminApp.deleteService(${s.id})" title="Excluir">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </button>
+            <button class="btn-action btn-edit" onclick="AdminApp.editService(${s.id}, '${encodeURIComponent(JSON.stringify(s))}')">✏️ Editar</button>
+            <button class="btn-action btn-delete" onclick="AdminApp.deleteService(${s.id})">🗑️</button>
           </td>
         </tr>
       `).join('');
@@ -399,8 +437,121 @@ const AdminApp = (() => {
   }
 
   // ============================
+  // EFFICIENCY STATS
+  // ============================
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API}/stats/all`, { headers: authHeaders() });
+      const stats = await res.json();
+      const tbody = document.getElementById('stats-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = stats.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.icon || '-'}</td>
+          <td>${s.label_pt}</td>
+          <td>${s.value}${s.suffix || ''}</td>
+          <td>${s.sort_order}</td>
+          <td><span class="badge-active ${s.is_active ? 'badge-yes' : 'badge-no'}">${s.is_active ? 'Sim' : 'Não'}</span></td>
+          <td class="actions">
+            <button class="btn-action btn-edit" onclick="AdminApp.editStat(${s.id}, '${encodeURIComponent(JSON.stringify(s))}')">✏️ Editar</button>
+            <button class="btn-action btn-delete" onclick="AdminApp.deleteStat(${s.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  function openStatForm(stat = null) {
+    const modal = document.getElementById('stat-form-modal');
+    document.getElementById('stat-form-title').textContent = stat ? 'Editar Estatística' : 'Nova Estatística';
+    document.getElementById('stat-form').reset();
+    document.getElementById('stat-id').value = stat ? stat.id : '';
+
+    if (stat) {
+      document.getElementById('stat-icon').value = stat.icon || '';
+      document.getElementById('stat-label-pt').value = stat.label_pt || '';
+      document.getElementById('stat-label-en').value = stat.label_en || '';
+      document.getElementById('stat-label-es').value = stat.label_es || '';
+      document.getElementById('stat-value').value = stat.value || '';
+      document.getElementById('stat-suffix').value = stat.suffix || '%';
+      document.getElementById('stat-sort').value = stat.sort_order || 0;
+      document.getElementById('stat-active').checked = stat.is_active !== 0;
+    }
+    modal.classList.add('active');
+  }
+
+  function editStat(id, encodedData) {
+    const stat = JSON.parse(decodeURIComponent(encodedData));
+    openStatForm(stat);
+  }
+
+  async function saveStat(e) {
+    e.preventDefault();
+    const id = document.getElementById('stat-id').value;
+    const body = {
+      icon: document.getElementById('stat-icon').value,
+      label_pt: document.getElementById('stat-label-pt').value,
+      label_en: document.getElementById('stat-label-en').value,
+      label_es: document.getElementById('stat-label-es').value,
+      value: document.getElementById('stat-value').value,
+      suffix: document.getElementById('stat-suffix').value,
+      sort_order: document.getElementById('stat-sort').value,
+      is_active: document.getElementById('stat-active').checked ? '1' : '0',
+    };
+
+    try {
+      const url = id ? `${API}/stats/${id}` : `${API}/stats`;
+      const method = id ? 'PUT' : 'POST';
+      await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+      closeModal('stat-form-modal');
+      loadStats();
+    } catch (err) { alert('Erro ao salvar estatística'); }
+  }
+
+  async function deleteStat(id) {
+    if (!confirm('Tem certeza?')) return;
+    await fetch(`${API}/stats/${id}`, { method: 'DELETE', headers: authHeaders() });
+    loadStats();
+  }
+
+  // ============================
   // SETTINGS
   // ============================
+  async function loadSiteSettings() {
+    try {
+      const res = await fetch(`${API}/settings`);
+      const settings = await res.json();
+      Object.entries(settings).forEach(([key, value]) => {
+        const el = document.getElementById(`setting-${key}`);
+        if (el) el.value = value;
+      });
+    } catch (err) { console.error(err); }
+  }
+
+  async function saveSiteSettings(e) {
+    e.preventDefault();
+    const msg = document.getElementById('site-settings-message');
+    const body = {
+      whatsapp_number: document.getElementById('setting-whatsapp_number').value.replace(/\D/g, ''),
+      phone_display: document.getElementById('setting-phone_display').value,
+      email: document.getElementById('setting-email').value,
+      instagram_handle: document.getElementById('setting-instagram_handle').value,
+      instagram_url: document.getElementById('setting-instagram_url').value,
+    };
+
+    try {
+      const res = await fetch(`${API}/settings`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar');
+      msg.textContent = 'Configurações salvas com sucesso!';
+      msg.style.color = 'var(--color-success)';
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.style.color = 'var(--color-danger)';
+    }
+  }
+
   async function changePassword(e) {
     e.preventDefault();
     const currentPassword = document.getElementById('current-password').value;
@@ -439,8 +590,17 @@ const AdminApp = (() => {
     const targetSection = document.getElementById(`section-${section}`);
     if (targetSection) targetSection.style.display = 'block';
 
-    document.getElementById('admin-page-title').textContent =
-      { products: 'Produtos', faq: 'FAQ', services: 'Serviços', settings: 'Configurações' }[section] || section;
+    const pageTitle = {
+      products: 'Produtos',
+      categories: 'Categorias',
+      faq: 'FAQ',
+      services: 'Serviços',
+      stats: 'Estatísticas',
+      settings: 'Configurações'
+    }[section] || section;
+
+    const titleEl = document.getElementById('admin-page-title');
+    if (titleEl) titleEl.textContent = pageTitle;
 
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
     document.querySelector(`.sidebar-link[data-section="${section}"]`)?.classList.add('active');
@@ -451,13 +611,17 @@ const AdminApp = (() => {
     }
 
     // Load data for section
-    if (section === 'faq') loadFaq();
+    if (section === 'categories') loadCategoriesTable();
+    else if (section === 'faq') loadFaq();
     else if (section === 'services') loadServices();
+    else if (section === 'stats') loadStats();
+    else if (section === 'settings') loadSiteSettings();
     else if (section === 'products') loadProducts();
   }
 
   function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('active');
   }
 
   // ============================
@@ -470,7 +634,7 @@ const AdminApp = (() => {
     }
 
     // Login form
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       login(
         document.getElementById('login-username').value,
@@ -479,7 +643,7 @@ const AdminApp = (() => {
     });
 
     // Logout
-    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
 
     // Sidebar navigation
     document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
@@ -487,23 +651,23 @@ const AdminApp = (() => {
         e.preventDefault();
         switchSection(link.dataset.section);
         // Close mobile sidebar
-        document.getElementById('admin-sidebar').classList.remove('active');
+        document.getElementById('admin-sidebar')?.classList.remove('active');
       });
     });
 
     // Mobile sidebar
     document.getElementById('mobile-sidebar-toggle')?.addEventListener('click', () => {
-      document.getElementById('admin-sidebar').classList.toggle('active');
+      document.getElementById('admin-sidebar')?.classList.toggle('active');
     });
 
     // Product form
-    document.getElementById('btn-add-product').addEventListener('click', () => openProductForm());
-    document.getElementById('product-form').addEventListener('submit', saveProduct);
-    document.getElementById('product-form-close').addEventListener('click', () => closeModal('product-form-modal'));
-    document.getElementById('product-form-cancel').addEventListener('click', () => closeModal('product-form-modal'));
+    document.getElementById('btn-add-product')?.addEventListener('click', () => openProductForm());
+    document.getElementById('product-form')?.addEventListener('submit', saveProduct);
+    document.getElementById('product-form-close')?.addEventListener('click', () => closeModal('product-form-modal'));
+    document.getElementById('product-form-cancel')?.addEventListener('click', () => closeModal('product-form-modal'));
 
     // Image preview
-    document.getElementById('product-image').addEventListener('change', (e) => {
+    document.getElementById('product-image')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -516,26 +680,46 @@ const AdminApp = (() => {
       }
     });
 
+    // Category form
+    document.getElementById('btn-add-category')?.addEventListener('click', () => openCategoryForm());
+    document.getElementById('category-form')?.addEventListener('submit', saveCategory);
+    document.getElementById('category-form-close')?.addEventListener('click', () => closeModal('category-form-modal'));
+    document.getElementById('category-form-cancel')?.addEventListener('click', () => closeModal('category-form-modal'));
+
     // FAQ form
-    document.getElementById('btn-add-faq').addEventListener('click', () => openFaqForm());
-    document.getElementById('faq-form').addEventListener('submit', saveFaq);
-    document.getElementById('faq-form-close').addEventListener('click', () => closeModal('faq-form-modal'));
-    document.getElementById('faq-form-cancel').addEventListener('click', () => closeModal('faq-form-modal'));
+    document.getElementById('btn-add-faq')?.addEventListener('click', () => openFaqForm());
+    document.getElementById('faq-form')?.addEventListener('submit', saveFaq);
+    document.getElementById('faq-form-close')?.addEventListener('click', () => closeModal('faq-form-modal'));
+    document.getElementById('faq-form-cancel')?.addEventListener('click', () => closeModal('faq-form-modal'));
 
     // Service form
-    document.getElementById('btn-add-service').addEventListener('click', () => openServiceForm());
-    document.getElementById('service-form').addEventListener('submit', saveService);
-    document.getElementById('service-form-close').addEventListener('click', () => closeModal('service-form-modal'));
-    document.getElementById('service-form-cancel').addEventListener('click', () => closeModal('service-form-modal'));
+    document.getElementById('btn-add-service')?.addEventListener('click', () => openServiceForm());
+    document.getElementById('service-form')?.addEventListener('submit', saveService);
+    document.getElementById('service-form-close')?.addEventListener('click', () => closeModal('service-form-modal'));
+    document.getElementById('service-form-cancel')?.addEventListener('click', () => closeModal('service-form-modal'));
+
+    // Stat form
+    document.getElementById('btn-add-stat')?.addEventListener('click', () => openStatForm());
+    document.getElementById('stat-form')?.addEventListener('submit', saveStat);
+    document.getElementById('stat-form-close')?.addEventListener('click', () => closeModal('stat-form-modal'));
+    document.getElementById('stat-form-cancel')?.addEventListener('click', () => closeModal('stat-form-modal'));
 
     // Settings
-    document.getElementById('change-password-form').addEventListener('submit', changePassword);
+    document.getElementById('site-settings-form')?.addEventListener('submit', saveSiteSettings);
+    document.getElementById('change-password-form')?.addEventListener('submit', changePassword);
 
     // Close modals on overlay click
     document.querySelectorAll('.admin-modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) overlay.classList.remove('active');
       });
+    });
+
+    // Keyboard support: Escape closes active modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.admin-modal-overlay.active').forEach(m => m.classList.remove('active'));
+      }
     });
 
     // Check if already logged in
@@ -550,7 +734,9 @@ const AdminApp = (() => {
 
   return {
     editProduct, deleteProduct,
+    editCategory, deleteCategory,
     editFaq, deleteFaq,
     editService, deleteService,
+    editStat, deleteStat,
   };
 })();

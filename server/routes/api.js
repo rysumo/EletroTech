@@ -20,13 +20,14 @@ function resultToObjects(result) {
 // CATEGORIES
 // ============================
 
-// GET /api/categories
+// GET /api/categories — active only (public, used for catalog filter tabs)
 router.get('/categories', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
+        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (!error && data) return res.json(data);
@@ -37,7 +38,7 @@ router.get('/categories', async (req, res) => {
 
   try {
     const db = await getDb();
-    const result = db.exec("SELECT * FROM categories ORDER BY sort_order ASC");
+    const result = db.exec("SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC");
     res.json(resultToObjects(result));
   } catch (err) {
     console.error('Error fetching categories:', err);
@@ -45,11 +46,176 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// GET /api/categories/all — including inactive (admin)
+router.get('/categories/all', authMiddleware, async (req, res) => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && data) return res.json(data);
+    } catch (err) {
+      console.warn('Supabase all categories fetch failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    const result = db.exec("SELECT * FROM categories ORDER BY sort_order ASC");
+    res.json(resultToObjects(result));
+  } catch (err) {
+    console.error('Error fetching all categories:', err);
+    res.status(500).json({ error: 'Erro ao buscar categorias' });
+  }
+});
+
+// POST /api/categories — admin
+router.post('/categories', authMiddleware, async (req, res) => {
+  const d = req.body;
+  if (!d.name_pt || !d.slug) {
+    return res.status(400).json({ error: 'Nome (PT) e slug são obrigatórios' });
+  }
+
+  const slug = String(d.slug).trim().toLowerCase();
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([{
+          name_pt: d.name_pt,
+          name_en: d.name_en || '',
+          name_es: d.name_es || '',
+          slug,
+          icon: d.icon || '📦',
+          sort_order: parseInt(d.sort_order, 10) || 0,
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
+        }])
+        .select();
+
+      if (!error && data) {
+        return res.status(201).json({ message: 'Categoria criada com sucesso', data: data[0] });
+      }
+    } catch (err) {
+      console.warn('Supabase create category failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    db.run(
+      `INSERT INTO categories (name_pt, name_en, name_es, slug, icon, sort_order, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        d.name_pt,
+        d.name_en || '',
+        d.name_es || '',
+        slug,
+        d.icon || '📦',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1
+      ]
+    );
+    saveDb();
+    res.status(201).json({ message: 'Categoria criada com sucesso' });
+  } catch (err) {
+    if (String(err.message || '').includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Já existe uma categoria com esse slug' });
+    }
+    console.error('Error creating category:', err);
+    res.status(500).json({ error: 'Erro ao criar categoria' });
+  }
+});
+
+// PUT /api/categories/:id — admin
+router.put('/categories/:id', authMiddleware, async (req, res) => {
+  const d = req.body;
+  const id = parseInt(req.params.id, 10);
+  const slug = d.slug ? String(d.slug).trim().toLowerCase() : '';
+
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({
+          name_pt: d.name_pt || '',
+          name_en: d.name_en || '',
+          name_es: d.name_es || '',
+          slug,
+          icon: d.icon || '📦',
+          sort_order: parseInt(d.sort_order, 10) || 0,
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
+        })
+        .eq('id', id);
+
+      if (!error) return res.json({ message: 'Categoria atualizada com sucesso' });
+    } catch (err) {
+      console.warn('Supabase update category failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    db.run(
+      `UPDATE categories SET name_pt = ?, name_en = ?, name_es = ?, slug = ?, icon = ?, sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [
+        d.name_pt || '',
+        d.name_en || '',
+        d.name_es || '',
+        slug,
+        d.icon || '📦',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1,
+        id
+      ]
+    );
+    saveDb();
+    res.json({ message: 'Categoria atualizada com sucesso' });
+  } catch (err) {
+    if (String(err.message || '').includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Já existe uma categoria com esse slug' });
+    }
+    console.error('Error updating category:', err);
+    res.status(500).json({ error: 'Erro ao atualizar categoria' });
+  }
+});
+
+// DELETE /api/categories/:id — admin
+router.delete('/categories/:id', authMiddleware, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    const db = await getDb();
+    const inUse = db.exec("SELECT COUNT(*) as c FROM products WHERE category_id = ?", [id]);
+    if (inUse.length > 0 && inUse[0].values.length > 0 && inUse[0].values[0][0] > 0) {
+      return res.status(400).json({ error: 'Esta categoria não pode ser excluída pois possui produtos vinculados' });
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('categories').delete().eq('id', id);
+        if (!error) return res.json({ message: 'Categoria removida com sucesso' });
+      } catch (err) {
+        console.warn('Supabase delete category failed, falling back to SQLite:', err.message);
+      }
+    }
+
+    db.run("DELETE FROM categories WHERE id = ?", [id]);
+    saveDb();
+    res.json({ message: 'Categoria removida com sucesso' });
+  } catch (err) {
+    console.error('Error deleting category:', err);
+    res.status(500).json({ error: 'Erro ao remover categoria' });
+  }
+});
+
 // ============================
 // SERVICES
 // ============================
 
-// GET /api/services — public
+// GET /api/services — public (active only)
 router.get('/services', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
@@ -116,7 +282,7 @@ router.post('/services', authMiddleware, async (req, res) => {
           description_es: d.description_es || '',
           icon: d.icon || '⚡',
           sort_order: parseInt(d.sort_order, 10) || 0,
-          is_active: d.is_active === false || d.is_active === '0' || d.is_active === false ? false : true
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
         }])
         .select();
 
@@ -130,9 +296,20 @@ router.post('/services', authMiddleware, async (req, res) => {
 
   try {
     const db = await getDb();
-    db.run(`INSERT INTO services (title_pt, title_en, title_es, description_pt, description_en, description_es, icon, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [d.title_pt || '', d.title_en || '', d.title_es || '', d.description_pt || '', d.description_en || '', d.description_es || '', d.icon || '⚡', parseInt(d.sort_order, 10) || 0]
+    db.run(
+      `INSERT INTO services (title_pt, title_en, title_es, description_pt, description_en, description_es, icon, sort_order, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        d.title_pt || '',
+        d.title_en || '',
+        d.title_es || '',
+        d.description_pt || '',
+        d.description_en || '',
+        d.description_es || '',
+        d.icon || '⚡',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1
+      ]
     );
     saveDb();
     res.status(201).json({ message: 'Serviço criado com sucesso' });
@@ -160,7 +337,7 @@ router.put('/services/:id', authMiddleware, async (req, res) => {
           description_es: d.description_es || '',
           icon: d.icon || '⚡',
           sort_order: parseInt(d.sort_order, 10) || 0,
-          is_active: d.is_active === false || d.is_active === '0' || d.is_active === false ? false : true
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
         })
         .eq('id', id);
 
@@ -172,8 +349,20 @@ router.put('/services/:id', authMiddleware, async (req, res) => {
 
   try {
     const db = await getDb();
-    db.run(`UPDATE services SET title_pt = ?, title_en = ?, title_es = ?, description_pt = ?, description_en = ?, description_es = ?, icon = ?, sort_order = ?, is_active = ? WHERE id = ?`,
-      [d.title_pt || '', d.title_en || '', d.title_es || '', d.description_pt || '', d.description_en || '', d.description_es || '', d.icon || '⚡', parseInt(d.sort_order, 10) || 0, d.is_active === false || d.is_active === '0' || d.is_active === false ? 0 : 1, id]
+    db.run(
+      `UPDATE services SET title_pt = ?, title_en = ?, title_es = ?, description_pt = ?, description_en = ?, description_es = ?, icon = ?, sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [
+        d.title_pt || '',
+        d.title_en || '',
+        d.title_es || '',
+        d.description_pt || '',
+        d.description_en || '',
+        d.description_es || '',
+        d.icon || '⚡',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1,
+        id
+      ]
     );
     saveDb();
     res.json({ message: 'Serviço atualizado com sucesso' });
@@ -211,7 +400,7 @@ router.delete('/services/:id', authMiddleware, async (req, res) => {
 // FAQ
 // ============================
 
-// GET /api/faq — public
+// GET /api/faq — public (active only)
 router.get('/faq', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
@@ -277,7 +466,7 @@ router.post('/faq', authMiddleware, async (req, res) => {
           answer_en: d.answer_en || '',
           answer_es: d.answer_es || '',
           sort_order: parseInt(d.sort_order, 10) || 0,
-          is_active: d.is_active === false || d.is_active === '0' || d.is_active === false ? false : true
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
         }])
         .select();
 
@@ -291,9 +480,19 @@ router.post('/faq', authMiddleware, async (req, res) => {
 
   try {
     const db = await getDb();
-    db.run(`INSERT INTO faq (question_pt, question_en, question_es, answer_pt, answer_en, answer_es, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [d.question_pt || '', d.question_en || '', d.question_es || '', d.answer_pt || '', d.answer_en || '', d.answer_es || '', parseInt(d.sort_order, 10) || 0]
+    db.run(
+      `INSERT INTO faq (question_pt, question_en, question_es, answer_pt, answer_en, answer_es, sort_order, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        d.question_pt || '',
+        d.question_en || '',
+        d.question_es || '',
+        d.answer_pt || '',
+        d.answer_en || '',
+        d.answer_es || '',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1
+      ]
     );
     saveDb();
     res.status(201).json({ message: 'FAQ criada com sucesso' });
@@ -320,7 +519,7 @@ router.put('/faq/:id', authMiddleware, async (req, res) => {
           answer_en: d.answer_en || '',
           answer_es: d.answer_es || '',
           sort_order: parseInt(d.sort_order, 10) || 0,
-          is_active: d.is_active === false || d.is_active === '0' || d.is_active === false ? false : true
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
         })
         .eq('id', id);
 
@@ -332,8 +531,19 @@ router.put('/faq/:id', authMiddleware, async (req, res) => {
 
   try {
     const db = await getDb();
-    db.run(`UPDATE faq SET question_pt = ?, question_en = ?, question_es = ?, answer_pt = ?, answer_en = ?, answer_es = ?, sort_order = ?, is_active = ? WHERE id = ?`,
-      [d.question_pt || '', d.question_en || '', d.question_es || '', d.answer_pt || '', d.answer_en || '', d.answer_es || '', parseInt(d.sort_order, 10) || 0, d.is_active === false || d.is_active === '0' || d.is_active === false ? 0 : 1, id]
+    db.run(
+      `UPDATE faq SET question_pt = ?, question_en = ?, question_es = ?, answer_pt = ?, answer_en = ?, answer_es = ?, sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [
+        d.question_pt || '',
+        d.question_en || '',
+        d.question_es || '',
+        d.answer_pt || '',
+        d.answer_en || '',
+        d.answer_es || '',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1,
+        id
+      ]
     );
     saveDb();
     res.json({ message: 'FAQ atualizada com sucesso' });
@@ -371,13 +581,14 @@ router.delete('/faq/:id', authMiddleware, async (req, res) => {
 // EFFICIENCY STATS
 // ============================
 
-// GET /api/stats — public
+// GET /api/stats — public (active only)
 router.get('/stats', async (req, res) => {
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
         .from('efficiency_stats')
         .select('*')
+        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (!error && data) return res.json(data);
@@ -388,11 +599,212 @@ router.get('/stats', async (req, res) => {
 
   try {
     const db = await getDb();
-    const result = db.exec("SELECT * FROM efficiency_stats ORDER BY sort_order ASC");
+    const result = db.exec("SELECT * FROM efficiency_stats WHERE is_active = 1 ORDER BY sort_order ASC");
     res.json(resultToObjects(result));
   } catch (err) {
     console.error('Error fetching stats:', err);
     res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// GET /api/stats/all — admin
+router.get('/stats/all', authMiddleware, async (req, res) => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('efficiency_stats')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && data) return res.json(data);
+    } catch (err) {
+      console.warn('Supabase all stats fetch failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    const result = db.exec("SELECT * FROM efficiency_stats ORDER BY sort_order ASC");
+    res.json(resultToObjects(result));
+  } catch (err) {
+    console.error('Error fetching all stats:', err);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// POST /api/stats — admin
+router.post('/stats', authMiddleware, async (req, res) => {
+  const d = req.body;
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('efficiency_stats')
+        .insert([{
+          label_pt: d.label_pt || '',
+          label_en: d.label_en || '',
+          label_es: d.label_es || '',
+          value: d.value || '0',
+          suffix: d.suffix || '%',
+          icon: d.icon || '📊',
+          sort_order: parseInt(d.sort_order, 10) || 0,
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
+        }])
+        .select();
+
+      if (!error && data) {
+        return res.status(201).json({ message: 'Estatística criada com sucesso', data: data[0] });
+      }
+    } catch (err) {
+      console.warn('Supabase create stat failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    db.run(
+      `INSERT INTO efficiency_stats (label_pt, label_en, label_es, value, suffix, icon, sort_order, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        d.label_pt || '',
+        d.label_en || '',
+        d.label_es || '',
+        d.value || '0',
+        d.suffix || '%',
+        d.icon || '📊',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1
+      ]
+    );
+    saveDb();
+    res.status(201).json({ message: 'Estatística criada com sucesso' });
+  } catch (err) {
+    console.error('Error creating stat:', err);
+    res.status(500).json({ error: 'Erro ao criar estatística' });
+  }
+});
+
+// PUT /api/stats/:id — admin
+router.put('/stats/:id', authMiddleware, async (req, res) => {
+  const d = req.body;
+  const id = parseInt(req.params.id, 10);
+
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase
+        .from('efficiency_stats')
+        .update({
+          label_pt: d.label_pt || '',
+          label_en: d.label_en || '',
+          label_es: d.label_es || '',
+          value: d.value || '0',
+          suffix: d.suffix || '%',
+          icon: d.icon || '📊',
+          sort_order: parseInt(d.sort_order, 10) || 0,
+          is_active: d.is_active === false || d.is_active === '0' || d.is_active === 0 ? false : true
+        })
+        .eq('id', id);
+
+      if (!error) return res.json({ message: 'Estatística atualizada com sucesso' });
+    } catch (err) {
+      console.warn('Supabase update stat failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    db.run(
+      `UPDATE efficiency_stats SET label_pt = ?, label_en = ?, label_es = ?, value = ?, suffix = ?, icon = ?, sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [
+        d.label_pt || '',
+        d.label_en || '',
+        d.label_es || '',
+        d.value || '0',
+        d.suffix || '%',
+        d.icon || '📊',
+        parseInt(d.sort_order, 10) || 0,
+        d.is_active === false || d.is_active === '0' || d.is_active === 0 ? 0 : 1,
+        id
+      ]
+    );
+    saveDb();
+    res.json({ message: 'Estatística atualizada com sucesso' });
+  } catch (err) {
+    console.error('Error updating stat:', err);
+    res.status(500).json({ error: 'Erro ao atualizar estatística' });
+  }
+});
+
+// DELETE /api/stats/:id — admin
+router.delete('/stats/:id', authMiddleware, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('efficiency_stats').delete().eq('id', id);
+      if (!error) return res.json({ message: 'Estatística removida com sucesso' });
+    } catch (err) {
+      console.warn('Supabase delete stat failed, falling back to SQLite:', err.message);
+    }
+  }
+
+  try {
+    const db = await getDb();
+    db.run("DELETE FROM efficiency_stats WHERE id = ?", [id]);
+    saveDb();
+    res.json({ message: 'Estatística removida com sucesso' });
+  } catch (err) {
+    console.error('Error deleting stat:', err);
+    res.status(500).json({ error: 'Erro ao remover estatística' });
+  }
+});
+
+// ============================
+// SITE SETTINGS
+// ============================
+
+const SETTINGS_DEFAULTS = {
+  whatsapp_number: '45999241306',
+  phone_display: '(45) 99924-1306',
+  email: 'contato@eletrotech.com.br',
+  instagram_handle: '@eletrotechmarechal',
+  instagram_url: 'https://instagram.com/eletrotechmarechal',
+  founded_year: '2018',
+};
+
+// GET /api/settings — public (site needs these values to render contact links)
+router.get('/settings', async (req, res) => {
+  try {
+    const db = await getDb();
+    const result = db.exec("SELECT key, value FROM settings");
+    const settings = { ...SETTINGS_DEFAULTS };
+    if (result.length > 0 && result[0].values.length > 0) {
+      result[0].values.forEach(([key, value]) => { settings[key] = value; });
+    }
+    res.json(settings);
+  } catch (err) {
+    console.error('Get settings error:', err);
+    res.status(500).json({ error: 'Erro ao buscar configurações' });
+  }
+});
+
+// PUT /api/settings — admin (bulk upsert; body is a { key: value, ... } object)
+router.put('/settings', authMiddleware, async (req, res) => {
+  try {
+    const db = await getDb();
+    const entries = Object.entries(req.body || {});
+
+    for (const [key, value] of entries) {
+      db.run(
+        `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`,
+        [key, String(value)]
+      );
+    }
+    saveDb();
+    res.json({ message: 'Configurações atualizadas com sucesso' });
+  } catch (err) {
+    console.error('Update settings error:', err);
+    res.status(500).json({ error: 'Erro ao atualizar configurações' });
   }
 });
 

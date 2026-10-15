@@ -18,6 +18,7 @@ const App = (() => {
 
     // Fetch and render dynamic content
     await Promise.all([
+      typeof SiteSettings !== 'undefined' ? SiteSettings.init() : Promise.resolve(),
       Products.init(),
       FAQ.init(),
       fetchServices(),
