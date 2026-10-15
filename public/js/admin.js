@@ -73,10 +73,10 @@ const AdminApp = (() => {
   // ============================
   async function loadCategoriesSelect() {
     try {
-      // Uses /all (admin-only) so products can still be reassigned even from
-      // categories that were deactivated rather than deleted.
       const res = await fetch(`${API}/categories/all`, { headers: authHeaders() });
-      categories = await res.json();
+      if (!res.ok) return;
+      const data = await res.json();
+      categories = Array.isArray(data) ? data : [];
       const select = document.getElementById('product-category');
       if (select) {
         select.innerHTML = '<option value="">Sem categoria</option>' +
@@ -200,12 +200,17 @@ const AdminApp = (() => {
   // ============================
   // CATEGORIES
   // ============================
+  let categoriesTableData = [];
+
   async function loadCategoriesTable() {
     try {
       const res = await fetch(`${API}/categories/all`, { headers: authHeaders() });
+      if (!res.ok) return;
       const cats = await res.json();
       const tbody = document.getElementById('categories-tbody');
       if (!tbody) return;
+      if (!Array.isArray(cats)) return;
+      categoriesTableData = cats;
       tbody.innerHTML = cats.map(c => `
         <tr>
           <td>${c.id}</td>
@@ -215,7 +220,7 @@ const AdminApp = (() => {
           <td>${c.sort_order}</td>
           <td><span class="badge-active ${c.is_active ? 'badge-yes' : 'badge-no'}">${c.is_active ? 'Sim' : 'Não'}</span></td>
           <td class="actions">
-            <button class="btn-action btn-edit" onclick="AdminApp.editCategory(${c.id}, '${encodeURIComponent(JSON.stringify(c))}')">${SVG_EDIT}</button>
+            <button class="btn-action btn-edit" onclick="AdminApp.editCategory(${c.id})">${SVG_EDIT}</button>
             <button class="btn-action btn-delete" onclick="AdminApp.deleteCategory(${c.id})" title="Excluir">${SVG_DELETE}</button>
           </td>
         </tr>
@@ -241,9 +246,11 @@ const AdminApp = (() => {
     modal.classList.add('active');
   }
 
-  function editCategory(id, encodedData) {
-    const category = JSON.parse(decodeURIComponent(encodedData));
-    openCategoryForm(category);
+  function editCategory(id) {
+    const category = categoriesTableData.find(c => c.id === id);
+    if (category) {
+      openCategoryForm(category);
+    }
   }
 
   async function saveCategory(e) {

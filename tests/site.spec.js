@@ -28,16 +28,30 @@ test.describe('Eletrotech - Testes do Site Público', () => {
     await expect(page.locator('#navbar-nav [data-i18n="nav.home"]')).toHaveText('Início');
   });
 
-  test('deve filtrar produtos por categoria no catálogo', async ({ page }) => {
+  test('deve filtrar produtos por categoria no catálogo e exibir os produtos', async ({ page }) => {
     // Aguarda catálogo carregar
     const catalog = page.locator('#catalog');
     await expect(catalog).toBeVisible();
+
+    // Aguarda produtos carregarem
+    const cards = page.locator('#products-grid .card');
+    await expect(cards.first()).toBeVisible({ timeout: 5000 });
+    const initialCount = await cards.count();
+    expect(initialCount).toBeGreaterThan(0);
 
     // Clica na categoria de Sondas
     const sondasTab = page.locator('#filter-tabs button:has-text("Sondas")');
     if (await sondasTab.count() > 0) {
       await sondasTab.click();
       await expect(sondasTab).toHaveClass(/active/);
+
+      // Garante que a categoria Sondas exibe produtos (como a OXILIFE FISH)
+      await page.waitForTimeout(350);
+      const sondasCards = page.locator('#products-grid .card');
+      await expect(sondasCards.first()).toBeVisible();
+      const sondasCount = await sondasCards.count();
+      expect(sondasCount).toBeGreaterThan(0);
+      await expect(page.locator('#products-grid')).not.toContainText('Nenhum produto encontrado nesta categoria');
     }
   });
 

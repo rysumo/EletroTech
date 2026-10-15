@@ -32,7 +32,8 @@ const Products = (() => {
     try {
       const res = await fetch('/api/categories');
       if (res.ok && (res.headers.get('content-type') || '').includes('application/json')) {
-        categories = await res.json();
+        const data = await res.json();
+        categories = Array.isArray(data) ? data : [];
       } else {
         categories = [];
       }
@@ -94,8 +95,8 @@ const Products = (() => {
 
     const suffix = I18n.getLangSuffix();
     const filtered = currentFilter === 'all'
-      ? allProducts.filter(p => !p.is_featured)
-      : allProducts.filter(p => p.category_slug === currentFilter && !p.is_featured);
+      ? allProducts
+      : allProducts.filter(p => p.category_slug === currentFilter);
 
     if (filtered.length === 0) {
       const emptyMsg = { 'pt-BR': 'Nenhum produto encontrado nesta categoria.', 'en': 'No products found in this category.', 'es': 'No se encontraron produtos en esta categoría.' };

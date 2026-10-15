@@ -49,10 +49,10 @@ function formatProduct(p) {
   if (!p) return null;
   return {
     ...p,
-    category_name_pt: p.categories?.name_pt || p.category_name_pt || null,
-    category_name_en: p.categories?.name_en || p.category_name_en || null,
-    category_name_es: p.categories?.name_es || p.category_name_es || null,
-    category_slug: p.categories?.slug || p.category_slug || null,
+    category_name_pt: p.categories?.name_pt || p.category?.name_pt || p.category_name_pt || null,
+    category_name_en: p.categories?.name_en || p.category?.name_en || p.category_name_en || null,
+    category_name_es: p.categories?.name_es || p.category?.name_es || p.category_name_es || null,
+    category_slug: p.categories?.slug || p.category?.slug || p.category_slug || null,
   };
 }
 
