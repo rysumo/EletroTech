@@ -15,6 +15,14 @@ const AdminApp = (() => {
   }
 
   async function login(username, password) {
+    const errorEl = document.getElementById('login-error');
+    errorEl.textContent = '';
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Entrando...';
+    }
+
     try {
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
@@ -22,12 +30,17 @@ const AdminApp = (() => {
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
       token = data.token;
       localStorage.setItem('eletrotech-admin-token', token);
       showDashboard(data.user);
     } catch (err) {
-      document.getElementById('login-error').textContent = err.message || 'Erro ao fazer login';
+      errorEl.textContent = err.message || 'Erro ao fazer login';
+    } finally {
+      if (loginBtn) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Entrar';
+      }
     }
   }
 
@@ -50,14 +63,23 @@ const AdminApp = (() => {
     localStorage.removeItem('eletrotech-admin-token');
     document.getElementById('admin-dashboard').style.display = 'none';
     document.getElementById('admin-login').style.display = '';
+    if (window.location.hash) {
+      window.history.replaceState(null, '', '/admin');
+    }
   }
 
   function showDashboard(user) {
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-dashboard').style.display = 'flex';
     document.getElementById('admin-user-name').textContent = user.username;
-    loadProducts();
-    loadCategories();
+
+    const hash = window.location.hash.replace('#', '');
+    if (['products', 'faq', 'services', 'settings'].includes(hash)) {
+      switchSection(hash);
+    } else {
+      loadProducts();
+      loadCategories();
+    }
   }
 
   // ============================
@@ -377,12 +399,19 @@ const AdminApp = (() => {
   // ============================
   function switchSection(section) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-    document.getElementById(`section-${section}`).style.display = 'block';
+    const targetSection = document.getElementById(`section-${section}`);
+    if (targetSection) targetSection.style.display = 'block';
+
     document.getElementById('admin-page-title').textContent =
       { products: 'Produtos', faq: 'FAQ', services: 'Serviços', settings: 'Configurações' }[section] || section;
 
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
     document.querySelector(`.sidebar-link[data-section="${section}"]`)?.classList.add('active');
+
+    // Sync clean section in browser URL
+    if (window.location.hash !== `#${section}`) {
+      window.history.replaceState(null, '', `/admin#${section}`);
+    }
 
     // Load data for section
     if (section === 'faq') loadFaq();
@@ -398,6 +427,11 @@ const AdminApp = (() => {
   // INIT
   // ============================
   async function init() {
+    // Client-side Canonical URL enforcement: normalize /admin.html to /admin
+    if (window.location.pathname.endsWith('/admin.html')) {
+      window.history.replaceState(null, '', '/admin' + window.location.hash);
+    }
+
     // Login form
     document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();

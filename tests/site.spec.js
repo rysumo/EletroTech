@@ -17,15 +17,15 @@ test.describe('Eletrotech - Testes do Site Público', () => {
   test('deve alternar os idiomas da página corretamente', async ({ page }) => {
     // Alterna para Inglês
     await page.click('[data-lang="en"]');
-    await expect(page.locator('[data-i18n="nav.home"]')).toHaveText('Home');
+    await expect(page.locator('#navbar-nav [data-i18n="nav.home"]')).toHaveText('Home');
 
     // Alterna para Espanhol
     await page.click('[data-lang="es"]');
-    await expect(page.locator('[data-i18n="nav.home"]')).toHaveText('Inicio');
+    await expect(page.locator('#navbar-nav [data-i18n="nav.home"]')).toHaveText('Inicio');
 
     // Retorna para Português
     await page.click('[data-lang="pt-BR"]');
-    await expect(page.locator('[data-i18n="nav.home"]')).toHaveText('Início');
+    await expect(page.locator('#navbar-nav [data-i18n="nav.home"]')).toHaveText('Início');
   });
 
   test('deve filtrar produtos por categoria no catálogo', async ({ page }) => {
@@ -63,20 +63,85 @@ test.describe('Eletrotech - Testes do Site Público', () => {
       await expect(faqItem).toHaveClass(/active|open/);
     }
   });
+
+  test('deve possuir meta tags de SEO, Canonical e Open Graph configuradas', async ({ page }) => {
+    // Title & Description
+    await expect(page).toHaveTitle(/Eletrotech/);
+    const description = page.locator('meta[name="description"]');
+    await expect(description).toHaveAttribute('content', /automação elétrica/i);
+
+    // Canonical & Favicon
+    const canonical = page.locator('link[rel="canonical"]');
+    await expect(canonical).toHaveAttribute('href', /eletrotech/);
+    const favicon = page.locator('link[rel="icon"]');
+    await expect(favicon).toHaveAttribute('href', '/favicon.svg');
+
+    // Open Graph & Twitter Cards
+    const ogTitle = page.locator('meta[property="og:title"]');
+    await expect(ogTitle).toHaveAttribute('content', /Eletrotech/);
+    const twitterCard = page.locator('meta[name="twitter:card"]');
+    await expect(twitterCard).toHaveAttribute('content', 'summary_large_image');
+  });
+
+  test('deve possuir dados estruturados Schema Markup (JSON-LD) válidos', async ({ page }) => {
+    const schemaScript = page.locator('script[type="application/ld+json"]');
+    await expect(schemaScript).toBeAttached();
+    const content = await schemaScript.textContent();
+    const schema = JSON.parse(content || '{}');
+
+    expect(schema['@context']).toBe('https://schema.org');
+    const graph = schema['@graph'] || [];
+    const types = graph.flatMap(item => Array.isArray(item['@type']) ? item['@type'] : [item['@type']]);
+
+    expect(types).toContain('LocalBusiness');
+    expect(types).toContain('Product');
+    expect(types).toContain('FAQPage');
+  });
+
+  test('deve servir robots.txt e sitemap.xml publicamente', async ({ request }) => {
+    const robotsRes = await request.get(`${BASE_URL}/robots.txt`);
+    expect(robotsRes.status()).toBe(200);
+    const robotsText = await robotsRes.text();
+    expect(robotsText).toContain('Sitemap:');
+    expect(robotsText).toContain('Disallow: /admin');
+    expect(robotsText).toContain('Disallow: /admin.html');
+
+    const sitemapRes = await request.get(`${BASE_URL}/sitemap.xml`);
+    expect(sitemapRes.status()).toBe(200);
+    const sitemapText = await sitemapRes.text();
+    expect(sitemapText).toContain('<urlset');
+    expect(sitemapText).toContain('eletrotech');
+  });
 });
 
-test.describe('Eletrotech - Painel Administrativo', () => {
-  test('deve permitir login do administrador e exibir a dashboard', async ({ page }) => {
+test.describe('Eletrotech - Painel Administrativo (Enterprise Architecture)', () => {
+  test('deve redirecionar a URL legada /admin.html para a rota canônica /admin', async ({ page }) => {
     await page.goto(`${BASE_URL}/admin.html`);
+    // Verifica que o navegador foi redirecionado e a URL exibida é /admin
+    expect(page.url()).toBe(`${BASE_URL}/admin`);
+    // Verifica que o formulário de login está presente
+    await expect(page.locator('#admin-login')).toBeVisible();
+  });
+
+  test('deve carregar diretamente a rota limpa /admin e conter headers de segurança', async ({ page }) => {
+    const response = await page.goto(`${BASE_URL}/admin`);
+    expect(response.status()).toBe(200);
+    expect(page.url()).toBe(`${BASE_URL}/admin`);
+    await expect(page.locator('#admin-login')).toBeVisible();
+  });
+
+  test('deve permitir login do administrador na rota /admin e exibir a dashboard', async ({ page }) => {
+    await page.goto(`${BASE_URL}/admin`);
 
     // Preenche credenciais
-    await page.fill('input[name="username"], #username, input[type="text"]', 'admin');
-    await page.fill('input[name="password"], #password, input[type="password"]', 'admin123');
+    await page.fill('input[name="username"], #login-username, #username, input[type="text"]', 'admin');
+    await page.fill('input[name="password"], #login-password, #password, input[type="password"]', 'admin123');
 
     // Submete login
-    await page.click('button[type="submit"], .btn-login');
+    await page.click('button[type="submit"], #login-btn, .btn-admin-primary');
 
-    // Deve exibir o painel
-    await expect(page.locator('.admin-dashboard, #admin-dashboard, .admin-sidebar')).toBeVisible({ timeout: 5000 });
+    // Deve exibir o painel administrativo
+    await expect(page.locator('#admin-dashboard')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#admin-user-name')).toContainText('admin');
   });
 });

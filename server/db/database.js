@@ -122,6 +122,17 @@ function initTables() {
       sort_order INTEGER DEFAULT 0
     )
   `);
+
+  try {
+    const existingAdmin = db.exec("SELECT id FROM admin_users WHERE username = 'admin'");
+    if (existingAdmin.length === 0 || existingAdmin[0].values.length === 0) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('admin123', 10);
+      db.run("INSERT INTO admin_users (username, password) VALUES (?, ?)", ['admin', hash]);
+    }
+  } catch (e) {
+    console.error('Error seeding admin user into SQLite:', e);
+  }
 }
 
 module.exports = { getDb, saveDb, DB_PATH };

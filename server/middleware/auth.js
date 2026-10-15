@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { supabase } = require('../db/supabase');
+const { supabase, isSupabaseConfigured } = require('../db/supabase');
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || 'eletrotech-secret-key-change-in-production-2024';
 
@@ -12,19 +12,21 @@ async function authMiddleware(req, res, next) {
 
   const token = authHeader.split(' ')[1];
 
-  // 1. Check Supabase Auth
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (user && !error) {
-      req.user = {
-        id: user.id,
-        email: user.email,
-        username: user.email ? user.email.split('@')[0] : 'admin'
-      };
-      return next();
+  // 1. Check Supabase Auth if configured
+  if (isSupabaseConfigured) {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (user && !error) {
+        req.user = {
+          id: user.id,
+          email: user.email,
+          username: user.email ? user.email.split('@')[0] : 'admin'
+        };
+        return next();
+      }
+    } catch (err) {
+      // Proceed to fallback
     }
-  } catch (err) {
-    // Proceed to fallback
   }
 
   // 2. Fallback to local JWT verification

@@ -8,6 +8,7 @@ const fs = require('fs');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const apiRoutes = require('./routes/api');
+const { getDb } = require('./db/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,7 +32,7 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files with strict no-cache in local development
+// Cache control headers for local development and non-static requests
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -39,6 +40,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// ========================================================
+// Canonical Admin Routes (Enterprise Standard Architecture)
+// ========================================================
+
+// 1. Permanent redirect for legacy /admin.html -> /admin
+app.get('/admin.html', (req, res) => {
+  res.redirect(301, '/admin');
+});
+
+// 2. Enterprise Admin Route: Clean URL, Strict Security Headers & Anti-Cache
+app.get(['/admin', '/admin/*'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
+// Static assets options
 const staticOptions = {
   etag: false,
   lastModified: false,
@@ -74,13 +96,23 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-// Start server locally when not running inside Vercel serverless
-if (!process.env.VERCEL && require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`\n🚀 Eletrotech server running at http://localhost:${PORT}`);
-    console.log(`📦 API available at http://localhost:${PORT}/api`);
-    console.log(`🔧 Admin panel at http://localhost:${PORT}/admin.html\n`);
-  });
+// Initialize database and start server locally when not running inside Vercel serverless
+async function initServer() {
+  try {
+    await getDb();
+  } catch (err) {
+    console.warn('Local database initialization note:', err.message);
+  }
+
+  if (!process.env.VERCEL && require.main === module) {
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Eletrotech server running at http://localhost:${PORT}`);
+      console.log(`📦 API available at http://localhost:${PORT}/api`);
+      console.log(`🛡️ Admin panel (Clean URL) at http://localhost:${PORT}/admin\n`);
+    });
+  }
 }
+
+initServer();
 
 module.exports = app;

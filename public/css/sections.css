@@ -219,24 +219,45 @@
 .about-highlight-item {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   background: var(--color-white);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid var(--color-gray-200);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color 0.2s ease;
 }
 
 .about-highlight-item:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+  border-color: rgba(201, 168, 76, 0.4);
 }
 
-.about-highlight-item span:first-child {
-  font-size: 1.5rem;
+.highlight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: rgba(11, 19, 43, 0.05);
+  color: var(--color-primary);
+  flex-shrink: 0;
+  transition: background 0.25s, color 0.25s;
 }
 
-.about-highlight-item span:last-child {
+.about-highlight-item:hover .highlight-icon {
+  background: rgba(201, 168, 76, 0.18);
+  color: var(--color-primary-dark);
+}
+
+.highlight-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.about-highlight-text {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-primary-dark);
@@ -662,11 +683,30 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
   font-size: var(--text-sm);
   margin-bottom: var(--space-sm);
 }
 
-.footer-contact-item span:first-child {
-  font-size: 1.1rem;
+.contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-accent-gold);
+  flex-shrink: 0;
+}
+
+.contact-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer-social a svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }

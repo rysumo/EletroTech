@@ -140,7 +140,7 @@ npm run dev
 
 O servidor estará acessível em:
 - **Site público**: [http://localhost:3000](http://localhost:3000)
-- **Painel administrativo**: [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
+- **Painel administrativo (Clean URL)**: [http://localhost:3000/admin](http://localhost:3000/admin) *(redirecionamento canônico automático para quem acessar `/admin.html`)*
 - **API REST**: [http://localhost:3000/api](http://localhost:3000/api)
 
 ---

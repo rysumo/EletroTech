@@ -243,8 +243,18 @@
 }
 
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.1em;
+  line-height: 1;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-icon svg {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
 }
 
 .btn:hover .btn-icon {
@@ -607,6 +617,13 @@
   box-shadow: 0 6px 30px rgba(37, 211, 102, 0.7);
 }
 
+.whatsapp-float svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+  display: block;
+}
+
 @keyframes whatsapp-pulse {
   0%, 100% { box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5); }
   50% { box-shadow: 0 4px 30px rgba(37, 211, 102, 0.8), 0 0 0 8px rgba(37, 211, 102, 0.15); }
@@ -696,7 +713,16 @@
 .stat-icon {
   font-size: 2.5rem;
   margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-icon svg {
+  width: 44px;
+  height: 44px;
+  stroke: var(--color-accent-gold);
 }
 
 .stat-card:hover .stat-icon {
@@ -744,12 +770,32 @@
 .service-card-icon {
   font-size: 2.5rem;
   margin-bottom: var(--space-md);
-  display: inline-block;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-lg);
+  background: rgba(11, 19, 43, 0.04);
+  color: var(--color-primary);
+  margin-left: auto;
+  margin-right: auto;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+}
+
+.service-card-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--color-primary);
 }
 
 .service-card:hover .service-card-icon {
-  transform: scale(1.15) translateY(-3px);
+  transform: scale(1.12) translateY(-3px);
+  background: rgba(201, 168, 76, 0.15);
+}
+
+.service-card:hover .service-card-icon svg {
+  stroke: var(--color-accent-gold);
 }
 
 .service-card-title {

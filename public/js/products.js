@@ -109,7 +109,7 @@ const Products = (() => {
         <div class="card reveal-scale ${visibilityClass}" ${staggerStyle} data-product-id="${product.id}">
           ${product.discount_percent > 0 ? `<span class="card-badge">-${product.discount_percent}%</span>` : ''}
           ${product.is_featured ? `<span class="card-featured">⭐ Destaque</span>` : ''}
-          <div class="card-image product-card-placeholder" ${product.image ? `style="background-image: url('${product.image}'); background-size: cover; background-position: center; color: transparent;"` : ''}>
+          <div class="card-image product-card-placeholder" ${product.image ? `role="img" aria-label="${name}" style="background-image: url('${product.image}'); background-size: cover; background-position: center; color: transparent;"` : ''}>
             ${!product.image ? '📦' : ''}
           </div>
           <div class="card-body">
