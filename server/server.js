@@ -60,6 +60,9 @@ app.get(['/admin', '/admin/*'], (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
 
+// Public directory path
+const publicPath = path.join(__dirname, '..', 'public');
+
 // Static assets options
 const staticOptions = {
   etag: false,
@@ -91,10 +94,12 @@ app.use(['/api', '/api/*'], (req, res) => {
 
 // Helper para resposta Markdown da Home
 function getHomeMarkdown() {
-  const llmsPath = path.join(publicPath, 'llms.txt');
-  if (fs.existsSync(llmsPath)) {
-    return fs.readFileSync(llmsPath, 'utf-8');
-  }
+  try {
+    const llmsPath = path.join(publicPath, 'llms.txt');
+    if (fs.existsSync(llmsPath)) {
+      return fs.readFileSync(llmsPath, 'utf-8');
+    }
+  } catch (e) {}
   return `# Eletrotech Marechal — Automação Elétrica & Piscicultura
 
 Soluções completas em automação industrial e sonda inteligente OXILIFE FISH em Marechal Cândido Rondon e região.
@@ -162,8 +167,19 @@ app.get('/', (req, res) => {
   }
   res.setHeader('Vary', 'Accept');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  const homeFile = fs.existsSync(path.join(publicPath, 'home.html')) ? 'home.html' : 'index.html';
-  res.sendFile(path.join(publicPath, homeFile));
+  try {
+    const homeFile = path.join(publicPath, 'home.html');
+    if (fs.existsSync(homeFile)) {
+      return res.sendFile(path.resolve(homeFile));
+    }
+    const indexFile = path.join(publicPath, 'index.html');
+    if (fs.existsSync(indexFile)) {
+      return res.sendFile(path.resolve(indexFile));
+    }
+  } catch (e) {
+    console.error('Error serving home HTML:', e);
+  }
+  return res.status(404).send('Not Found');
 });
 
 // Handler de rotas não encontradas (404) e Fallback SPA
