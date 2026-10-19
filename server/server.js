@@ -162,7 +162,8 @@ app.get('/', (req, res) => {
   }
   res.setHeader('Vary', 'Accept');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(publicPath, 'index.html'));
+  const homeFile = fs.existsSync(path.join(publicPath, 'home.html')) ? 'home.html' : 'index.html';
+  res.sendFile(path.join(publicPath, homeFile));
 });
 
 // Handler de rotas não encontradas (404) e Fallback SPA

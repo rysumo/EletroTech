@@ -13,17 +13,7 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "header",
-          "key": "accept",
-          "value": "(.*text/markdown.*)"
-        }
-      ],
-      "destination": "/api"
-    },
+    { "source": "/", "destination": "/api" },
     { "source": "/.well-known/mcp", "destination": "/.well-known/mcp" },
     { "source": "/api/openapi.json", "destination": "/openapi.json" },
     { "source": "/api/(.*)", "destination": "/api" },
@@ -31,6 +21,7 @@
     { "source": "/contact", "destination": "/contact.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/docs", "destination": "/docs.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/(.*)", "destination": "/api" }
   ]
 }
