@@ -12,25 +12,44 @@
     display: flex;
   }
 
+  /* Evita que backdrop-filter crie containing block que prende o menu fixo nos 60px da navbar scrolled */
+  .navbar.menu-open,
+  .navbar:has(.navbar-nav.active),
+  body.no-scroll .navbar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .navbar-nav {
     position: fixed;
-    inset: 0;
-    background: rgba(7, 26, 56, 0.97);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: rgba(7, 26, 56, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: var(--space-xl);
+    gap: var(--space-lg);
     opacity: 0;
     visibility: hidden;
-    transition: all var(--transition-base);
+    pointer-events: none;
+    transition: opacity var(--transition-base), visibility var(--transition-base);
     z-index: 5;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: calc(var(--navbar-height) + var(--space-md)) var(--space-lg) var(--space-xl);
   }
 
   .navbar-nav.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   .navbar-nav a {
