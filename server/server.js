@@ -199,9 +199,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno no servidor' });
 });
 
-const PORT = process.env.PORT || 3000;
-
-if (process.env.NODE_ENV !== 'production' && require.main === module) {
+if (!process.env.VERCEL && require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
