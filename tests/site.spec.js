@@ -275,4 +275,56 @@ test.describe('Eletrotech - Painel Administrativo (Enterprise Architecture)', ()
     const stats = await statsRes.json();
     expect(Array.isArray(stats)).toBe(true);
   });
+
+  test('Prontidão para Agentes de IA: Markdown, MCP, llms.txt, JSON-LD e Trust Pages', async ({ request }) => {
+    // 1. Negociação de conteúdo Markdown na Home
+    const homeMdRes = await request.get('/', {
+      headers: { 'Accept': 'text/markdown' }
+    });
+    expect(homeMdRes.status()).toBe(200);
+    expect(homeMdRes.headers()['content-type']).toContain('text/markdown');
+    expect(homeMdRes.headers()['vary'] || '').toContain('Accept');
+    const homeMdText = await homeMdRes.text();
+    expect(homeMdText).toContain('Eletrotech Marechal');
+    expect(homeMdText).toContain('OXILIFE FISH');
+
+    // 2. Erro 404 amigável em Markdown com links
+    const notFoundRes = await request.get('/non-existent-page-agent-probe', {
+      headers: { 'Accept': 'text/markdown' }
+    });
+    expect(notFoundRes.status()).toBe(404);
+    expect(notFoundRes.headers()['content-type']).toContain('text/markdown');
+    const notFoundText = await notFoundRes.text();
+    expect(notFoundText.length).toBeGreaterThan(20);
+    expect(notFoundText).toContain('llms.txt');
+
+    // 3. Manifesto MCP em /.well-known/mcp
+    const mcpRes = await request.get('/.well-known/mcp');
+    expect(mcpRes.status()).toBe(200);
+    const mcpJson = await mcpRes.json();
+    expect(mcpJson.name).toBe('eletrotech-marechal');
+    expect(mcpJson.transport.type).toBe('streamable-http');
+    expect(mcpJson.tools.length).toBeGreaterThanOrEqual(1);
+
+    // 4. Guia llms.txt
+    const llmsRes = await request.get('/llms.txt');
+    expect(llmsRes.status()).toBe(200);
+    const llmsText = await llmsRes.text();
+    expect(llmsText).toContain('When to Use This');
+    expect(llmsText).toContain('OXILIFE FISH');
+
+    // 5. Páginas institucionais de confiança (>500 caracteres)
+    for (const page of ['/about', '/contact', '/privacy', '/docs']) {
+      const pageRes = await request.get(page);
+      expect(pageRes.status()).toBe(200);
+      const text = await pageRes.text();
+      expect(text.length).toBeGreaterThan(500);
+    }
+
+    // 6. OpenAPI Specification
+    const openApiRes = await request.get('/api/openapi.json');
+    expect(openApiRes.status()).toBe(200);
+    const openApiJson = await openApiRes.json();
+    expect(openApiJson.openapi).toBeDefined();
+  });
 });
