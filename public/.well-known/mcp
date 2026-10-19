@@ -1,0 +1,46 @@
+{
+  "name": "eletrotech-marechal",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Eletrotech Marechal - Aquaculture automation, OXILIFE FISH probe telemetry and industrial electrical catalog.",
+  "transport": {
+    "type": "streamable-http",
+    "url": "https://eletrotech-marechal.vercel.app/api/mcp"
+  },
+  "tools": [
+    {
+      "name": "get_products",
+      "description": "List all products, technical specifications and catalog items from Eletrotech Marechal.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Optional category filter (e.g., 'piscicultura', 'paineis', 'automacao')"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_product_by_id",
+      "description": "Get detailed technical specs and pricing for a specific product by ID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Product identifier"
+          }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "get_company_info",
+      "description": "Get company details, official contact channels, technical support and physical location.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

@@ -89,37 +89,122 @@ app.use(['/api', '/api/*'], (req, res) => {
   res.status(404).json({ error: 'Endpoint da API não encontrado' });
 });
 
-// SPA fallback — serve index.html for non-API routes with strict no-cache
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api') && !req.path.startsWith('/auth') && !req.path.startsWith('/products')) {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+// Helper para resposta Markdown da Home
+function getHomeMarkdown() {
+  const llmsPath = path.join(publicPath, 'llms.txt');
+  if (fs.existsSync(llmsPath)) {
+    return fs.readFileSync(llmsPath, 'utf-8');
   }
+  return `# Eletrotech Marechal — Automação Elétrica & Piscicultura
+
+Soluções completas em automação industrial e sonda inteligente OXILIFE FISH em Marechal Cândido Rondon e região.
+
+- Sobre: https://eletrotech-marechal.vercel.app/about
+- Contato: https://eletrotech-marechal.vercel.app/contact
+- Privacidade: https://eletrotech-marechal.vercel.app/privacy
+- Documentação: https://eletrotech-marechal.vercel.app/docs
+- llms.txt: https://eletrotech-marechal.vercel.app/llms.txt
+- MCP: https://eletrotech-marechal.vercel.app/.well-known/mcp
+`;
+}
+
+// Helper para resposta 404 em Markdown
+function getNotFoundMarkdown(requestedPath) {
+  return `# 404 — Recurso Não Encontrado (Not Found)
+
+O recurso solicitado \`${requestedPath}\` não foi localizado no servidor da Eletrotech Marechal.
+
+## Recursos e Documentação para Agentes de IA:
+- [Guia Oficial para Modelos e Agentes (llms.txt)](https://eletrotech-marechal.vercel.app/llms.txt)
+- [Manifesto MCP (Model Context Protocol)](https://eletrotech-marechal.vercel.app/.well-known/mcp)
+- [Especificação OpenAPI (JSON)](https://eletrotech-marechal.vercel.app/api/openapi.json)
+- [Página Inicial](https://eletrotech-marechal.vercel.app/)
+- [Sobre a Eletrotech Marechal](https://eletrotech-marechal.vercel.app/about)
+- [Canais de Contato e Suporte](https://eletrotech-marechal.vercel.app/contact)
+- [Política de Privacidade](https://eletrotech-marechal.vercel.app/privacy)
+- [Documentação Técnica](https://eletrotech-marechal.vercel.app/docs)
+- [Mapa do Site (sitemap.xml)](https://eletrotech-marechal.vercel.app/sitemap.xml)
+`;
+}
+
+// Rotas institucionais de confiança e metadados com suporte a clean URLs
+const trustPages = {
+  '/about': 'about.html',
+  '/contact': 'contact.html',
+  '/privacy': 'privacy.html',
+  '/docs': 'docs.html',
+  '/admin': 'admin.html'
+};
+
+for (const [routePath, file] of Object.entries(trustPages)) {
+  app.get([routePath, `${routePath}.html`], (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.sendFile(path.join(publicPath, file));
+  });
+}
+
+// Endpoint para /.well-known/mcp
+app.get('/.well-known/mcp', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(path.join(publicPath, '.well-known', 'mcp'));
 });
 
-// Error handling
+// Rota raiz com Content Negotiation para Markdown
+app.get('/', (req, res) => {
+  const accept = req.headers.accept || '';
+  if (accept.includes('text/markdown')) {
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Vary', 'Accept');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.send(getHomeMarkdown());
+  }
+  res.setHeader('Vary', 'Accept');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// Handler de rotas não encontradas (404) e Fallback SPA
+app.use((req, res) => {
+  const accept = req.headers.accept || '';
+  
+  // Se for requisição da API inexistente
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Endpoint da API não encontrado', path: req.path });
+  }
+
+  // Se o cliente (agente ou usuário) solicitou text/markdown
+  if (accept.includes('text/markdown')) {
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Vary', 'Accept');
+    return res.status(404).send(getNotFoundMarkdown(req.path));
+  }
+
+  // Para probes explícitas de 404 ou páginas inexistentes
+  if (req.path.includes('404') || req.path.includes('probe') || req.path.includes('not-found')) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(404).sendFile(path.join(publicPath, '404.html'));
+  }
+
+  // Fallback 404 padrão para qualquer outra página não mapeada
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(404).sendFile(path.join(publicPath, '404.html'));
+});
+
+// Error handler
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({ error: 'Erro interno do servidor' });
+  console.error('Unhandled server error:', err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'Erro interno no servidor' });
 });
 
-// Initialize database and start server locally when not running inside Vercel serverless
-if (!process.env.VERCEL && require.main === module) {
-  (async () => {
-    try {
-      await getDb();
-    } catch (err) {
-      console.warn('Local database initialization note:', err.message);
-    }
+const PORT = process.env.PORT || 3000;
 
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Eletrotech server running at http://localhost:${PORT}`);
-      console.log(`📦 API available at http://localhost:${PORT}/api`);
-      console.log(`🛡️ Admin panel (Clean URL) at http://localhost:${PORT}/admin\n`);
-    });
-  })();
+if (process.env.NODE_ENV !== 'production' && require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 }
 
 module.exports = app;

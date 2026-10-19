@@ -1,0 +1,77 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Eletrotech Marechal API",
+    "description": "API para catálogo de produtos elétricos industriais e telemetria da sonda OXILIFE FISH para piscicultura.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Eletrotech Marechal",
+      "email": "contato@eletrotechmarechal.com.br",
+      "url": "https://eletrotech-marechal.vercel.app/contact"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://eletrotech-marechal.vercel.app/api",
+      "description": "Servidor de Produção"
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "Listar produtos",
+        "description": "Retorna a lista de produtos e painéis cadastrados no catálogo.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filtrar por categoria"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de produtos retornada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer" },
+                      "name": { "type": "string" },
+                      "category": { "type": "string" },
+                      "price": { "type": "number" },
+                      "featured": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "summary": "Listar categorias",
+        "description": "Retorna todas as categorias disponíveis no catálogo.",
+        "responses": {
+          "200": {
+            "description": "Lista de categorias",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

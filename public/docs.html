@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentação Técnica e API — Eletrotech Marechal</title>
+  <meta name="description" content="Documentação para desenvolvedores, integração de telemetria da sonda OXILIFE FISH, protocolo MCP e especificação OpenAPI.">
+  <link rel="canonical" href="https://eletrotech-marechal.vercel.app/docs">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/sections.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+  <header class="site-header" id="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo" aria-label="Eletrotech Marechal - Página Inicial">
+        <img src="/assets/images/logo.png" alt="Eletrotech Marechal" class="logo-img">
+      </a>
+      <nav class="main-nav" id="main-nav">
+        <ul class="nav-list">
+          <li><a href="/" class="nav-link">Início</a></li>
+          <li><a href="/about" class="nav-link">Sobre Nós</a></li>
+          <li><a href="/contact" class="nav-link">Contato</a></li>
+          <li><a href="/privacy" class="nav-link">Privacidade</a></li>
+          <li><a href="/docs" class="nav-link active">Documentação</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="site-main" style="padding: 120px 20px 80px; max-width: 900px; margin: 0 auto; color: var(--color-text-main, #ffffff); line-height: 1.8;">
+    <article>
+      <h1 style="font-family: var(--font-heading); font-size: 2.4rem; color: var(--color-accent-gold-light, #d4af37); margin-bottom: 24px;">Documentação de Integração & API</h1>
+      
+      <p style="font-size: 1.1rem; margin-bottom: 24px;">
+        A Eletrotech disponibiliza endpoints padronizados, suporte a negociação de conteúdo Markdown para agentes inteligentes e interfaces via Model Context Protocol (MCP) para automação e supervisão.
+      </p>
+
+      <h2 style="font-size: 1.5rem; color: var(--color-white, #fff); margin-top: 32px; margin-bottom: 14px;">1. Model Context Protocol (MCP)</h2>
+      <p style="margin-bottom: 14px;">
+        Agentes de inteligência artificial (como Claude, ChatGPT e assistentes autônomos) podem se comunicar nativamente com os serviços da Eletrotech através do manifesto MCP localizado em:
+      </p>
+      <pre style="background: #0f172a; padding: 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; color: #38bdf8; margin-bottom: 20px;"><code>GET /.well-known/mcp
+Transport: Streamable HTTP (https://eletrotech-marechal.vercel.app/api/mcp)</code></pre>
+
+      <h2 style="font-size: 1.5rem; color: var(--color-white, #fff); margin-top: 32px; margin-bottom: 14px;">2. Negociação de Conteúdo Markdown</h2>
+      <p style="margin-bottom: 14px;">
+        Todas as requisições enviadas com o cabeçalho <code>Accept: text/markdown</code> recebem representações otimizadas para processamento por LLMs sem a sobrecarga de renderização HTML:
+      </p>
+      <pre style="background: #0f172a; padding: 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; color: #38bdf8; margin-bottom: 20px;"><code>curl -H "Accept: text/markdown" https://eletrotech-marechal.vercel.app/</code></pre>
+
+      <h2 style="font-size: 1.5rem; color: var(--color-white, #fff); margin-top: 32px; margin-bottom: 14px;">3. Especificação OpenAPI 3.0</h2>
+      <p style="margin-bottom: 20px;">
+        A especificação OpenAPI completa de nossos endpoints de catálogo e telemetria está disponível em formato JSON:
+        <br><a href="/api/openapi.json" style="color: #d4af37; text-decoration: underline;">Acessar /api/openapi.json</a>
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-footer" style="background: #0b0f19; padding: 40px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: #8892b0;">
+    <p>© 2026 Eletrotech Marechal. Todos os direitos reservados. Marechal Cândido Rondon - PR.</p>
+    <p><a href="/" style="color: #d4af37; text-decoration: none;">Início</a> | <a href="/about" style="color: #d4af37; text-decoration: none;">Sobre Nós</a> | <a href="/contact" style="color: #d4af37; text-decoration: none;">Contato</a> | <a href="/privacy" style="color: #d4af37; text-decoration: none;">Privacidade</a> | <a href="/llms.txt" style="color: #d4af37; text-decoration: none;">llms.txt</a></p>
+  </footer>
+</body>
+</html>

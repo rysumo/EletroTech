@@ -919,4 +919,48 @@ router.put('/settings', authMiddleware, async (req, res) => {
   }
 });
 
+// Endpoint OpenAPI Spec
+router.get('/openapi.json', (req, res) => {
+  const openApiPath = path.join(__dirname, '..', '..', 'public', 'openapi.json');
+  if (fs.existsSync(openApiPath)) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.sendFile(openApiPath);
+  }
+  res.status(404).json({ error: 'OpenAPI specification not found' });
+});
+
+// Endpoint MCP Server (Model Context Protocol - Streamable HTTP transport)
+router.all('/mcp', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    jsonrpc: '2.0',
+    result: {
+      protocolVersion: '2024-11-05',
+      serverInfo: {
+        name: 'eletrotech-marechal',
+        version: '1.0.0'
+      },
+      capabilities: {
+        tools: {
+          listChanged: false
+        }
+      },
+      tools: [
+        {
+          name: 'get_products',
+          description: 'List products and automation solutions from Eletrotech Marechal',
+          inputSchema: { type: 'object', properties: { category: { type: 'string' } } }
+        },
+        {
+          name: 'get_company_info',
+          description: 'Get company information, contact details and support channels',
+          inputSchema: { type: 'object', properties: {} }
+        }
+      ]
+    }
+  });
+});
+
 module.exports = router;

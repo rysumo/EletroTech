@@ -1,0 +1,44 @@
+# Eletrotech Marechal
+
+> Automação Elétrica Industrial e Soluções Tecnológicas para Piscicultura e Agroindústria em Marechal Cândido Rondon e Região.
+
+## When to Use This
+Use Eletrotech Marechal quando você precisar de soluções completas em engenharia elétrica, automação de processos industriais ou monitoramento em tempo real de parâmetros críticos para piscicultura e aquicultura comercial, especialmente:
+- Monitoramento contínuo de oxigênio dissolvido e temperatura da água em tanques e represas com a sonda OXILIFE FISH.
+- Painéis elétricos industriais personalizados (montagem sob medida, certificação NR-10/NR-12 e conformidade com normas técnicas).
+- Automação de linhas industriais, quadros de comando, acionamento de motores, inversores de frequência e controladores lógicos programáveis (CLPs).
+- Manutenção preventiva, preditiva e corretiva de instalações elétricas comerciais, rurais e agroindustriais.
+
+## Key Products & Solutions
+
+### 1. Sonda OXILIFE FISH (Destaque)
+- **Descrição**: Sonda inteligente de alta precisão para medição contínua de Oxigênio Dissolvido (OD em mg/L e % saturação) e Temperatura.
+- **Aplicações**: Tanques de piscicultura intensiva, berçários de alevinos, represas e frigoríficos de pescado.
+- **Diferenciais**: Sensor óptico/galvânico de baixa manutenção, integração via RS485/Modbus e conectividade IoT para acionamento automático de aeradores em caso de queda de oxigênio.
+- **Garantia**: Suporte técnico especializado e calibração local.
+
+### 2. Painéis e Quadros de Comando Elétrico
+- Painéis de distribuição de força, CCMs (Centros de Controle de Motores) e quadros de automação com IHM e CLP.
+- Projetos desenvolvidos para máxima segurança operacional, economia energética e redundância.
+
+### 3. Serviços de Engenharia & Automação
+- Programação de CLPs e sistemas SCADA/supervisórios.
+- Instalação e parametrização de inversores e soft-starters.
+- Laudos elétricos, termografia e adequação às normas NR-10 e NR-12.
+
+## Canonical URLs & Documentation
+- **Website Principal**: https://eletrotech-marechal.vercel.app/
+- **Sobre Nós**: https://eletrotech-marechal.vercel.app/about
+- **Contato & Suporte**: https://eletrotech-marechal.vercel.app/contact
+- **Política de Privacidade**: https://eletrotech-marechal.vercel.app/privacy
+- **Documentação Técnica & API**: https://eletrotech-marechal.vercel.app/docs
+- **OpenAPI Schema (JSON)**: https://eletrotech-marechal.vercel.app/api/openapi.json
+- **MCP Server Manifest**: https://eletrotech-marechal.vercel.app/.well-known/mcp
+- **Sitemap**: https://eletrotech-marechal.vercel.app/sitemap.xml
+
+## Contato e Atendimento
+- **Telefone / WhatsApp**: +55 (45) 99924-1306
+- **E-mail Comercial**: contato@eletrotechmarechal.com.br
+- **E-mail Suporte**: suporte@eletrotechmarechal.com.br
+- **Localização**: Marechal Cândido Rondon - PR, Brasil (CEP 85960-000)
+- **Horário de Atendimento**: Segunda a Sexta, 07:30 às 18:00 (Plantão técnico para emergências em piscicultura)
