@@ -84,9 +84,10 @@
         }
       },
       {
-        "@type": ["LocalBusiness", "Electrician"],
+        "@type": ["LocalBusiness", "Electrician", "Organization"],
         "@id": "https://eletrotech-marechal.vercel.app/#organization",
         "name": "Eletrotech Marechal — Automação Elétrica & Piscicultura",
+        "description": "Empresa especializada em automação elétrica para piscicultura, painéis industriais sob medida e sonda inteligente OXILIFE FISH para monitoramento de oxigênio dissolvido em Marechal Cândido Rondon e região.",
         "alternateName": ["Eletrotech", "Eletrotech Marechal", "Eletrotech Marechal Cândido Rondon", "Eletrotech Piscicultura"],
         "url": "https://eletrotech-marechal.vercel.app/",
         "logo": "https://eletrotech-marechal.vercel.app/favicon.svg",
@@ -95,10 +96,30 @@
         "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
+          "streetAddress": "Marechal Cândido Rondon",
           "addressLocality": "Marechal Cândido Rondon",
           "addressRegion": "PR",
+          "postalCode": "85960-000",
           "addressCountry": "BR"
         },
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+5545999241306",
+            "contactType": "customer service",
+            "email": "contato@eletrotechmarechal.com.br",
+            "areaServed": "BR",
+            "availableLanguage": ["Portuguese", "English", "Spanish"]
+          },
+          {
+            "@type": "ContactPoint",
+            "telephone": "+5545999241306",
+            "contactType": "technical support",
+            "email": "suporte@eletrotechmarechal.com.br",
+            "areaServed": "BR",
+            "availableLanguage": ["Portuguese"]
+          }
+        ],
         "areaServed": [
           {
             "@type": "AdministrativeArea",
@@ -519,7 +540,7 @@
             </div>
           </div>
           <div class="demo-info">
-            <h4 data-i18n="demo.video1_heading">Como funciona a sonda</h4>
+            <h3 data-i18n="demo.video1_heading">Como funciona a sonda</h3>
             <p data-i18n="demo.video1_desc">Veja como a sonda OXILIFE FISH monitora o oxigênio dissolvido e aciona automaticamente os aeradores para garantir a saúde dos peixes.</p>
           </div>
         </div>
@@ -535,7 +556,7 @@
             </div>
           </div>
           <div class="demo-info">
-            <h4 data-i18n="demo.video2_heading">Resultados reais</h4>
+            <h3 data-i18n="demo.video2_heading">Resultados reais</h3>
             <p data-i18n="demo.video2_desc">Confira o depoimento de um produtor que utiliza nossas soluções e alcançou economia de até 40% na conta de energia elétrica.</p>
           </div>
         </div>
@@ -608,11 +629,12 @@
         <div class="footer-column reveal">
           <h4 data-i18n="footer.nav_title">NAVEGAÇÃO</h4>
           <ul>
-            <li><a href="#hero" data-i18n="nav.home">Início</a></li>
-            <li><a href="#about" data-i18n="nav.about">Sobre</a></li>
-            <li><a href="#featured" data-i18n="nav.featured">OXILIFE FISH</a></li>
-            <li><a href="#catalog" data-i18n="nav.catalog">Produtos</a></li>
-            <li><a href="#services" data-i18n="nav.services">Serviços</a></li>
+            <li><a href="/" data-i18n="nav.home">Início</a></li>
+            <li><a href="/about" data-i18n="nav.about">Sobre Nós</a></li>
+            <li><a href="/contact" data-i18n="footer.contact_link">Contato</a></li>
+            <li><a href="/privacy" data-i18n="footer.privacy_link">Privacidade</a></li>
+            <li><a href="/docs" data-i18n="footer.docs_link">Documentação</a></li>
+            <li><a href="/llms.txt">llms.txt</a></li>
           </ul>
         </div>
 

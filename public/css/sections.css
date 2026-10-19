@@ -593,7 +593,7 @@
   padding: var(--space-xl);
 }
 
-.demo-info h4 {
+.demo-info h3 {
   color: var(--color-white);
   font-size: var(--text-xl);
   font-family: var(--font-heading);
@@ -601,7 +601,7 @@
   transition: color 0.2s ease;
 }
 
-.demo-card:hover .demo-info h4 {
+.demo-card:hover .demo-info h3 {
   color: var(--color-accent-gold-light);
 }
 
