@@ -327,4 +327,41 @@ test.describe('Eletrotech - Painel Administrativo (Enterprise Architecture)', ()
     const openApiJson = await openApiRes.json();
     expect(openApiJson.openapi).toBeDefined();
   });
+
+  test('deve abrir e fechar o menu mobile mantendo a posição de rolagem da tela (sem resetar para o topo)', async ({ page }) => {
+    // Configura viewport mobile
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto(BASE_URL);
+
+    const menuToggle = page.locator('#menu-toggle');
+    const navLinks = page.locator('#navbar-nav');
+    await expect(menuToggle).toBeVisible();
+
+    // Rola para baixo (ex: 800px)
+    await page.evaluate(() => window.scrollTo(0, 800));
+    await page.waitForTimeout(300);
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+    expect(scrollBefore).toBeGreaterThanOrEqual(750);
+
+    // Clica no menu hambúrguer para abrir
+    await menuToggle.click();
+    await page.waitForTimeout(400);
+
+    // Menu deve estar visível e ativo
+    await expect(navLinks).toHaveClass(/active/);
+    await expect(menuToggle).toHaveClass(/active/);
+
+    // Scroll DEVE PERMANECER no mesmo lugar (não resetar para 0)
+    const scrollWithMenuOpen = await page.evaluate(() => window.scrollY);
+    expect(scrollWithMenuOpen).toBe(scrollBefore);
+
+    // Clica no menu hambúrguer novamente para fechar
+    await menuToggle.click();
+    await page.waitForTimeout(400);
+
+    // Menu deve estar fechado e a posição da tela inalterada
+    await expect(navLinks).not.toHaveClass(/active/);
+    const scrollAfterClose = await page.evaluate(() => window.scrollY);
+    expect(scrollAfterClose).toBe(scrollBefore);
+  });
 });

@@ -66,13 +66,16 @@ const Navigation = (() => {
     }
   }
 
-  function toggleMobileMenu() {
+  function toggleMobileMenu(e) {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!navLinks || !menuToggle) return;
     const isActive = navLinks.classList.toggle('active');
     menuToggle.classList.toggle('active');
     menuToggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     if (navbar) navbar.classList.toggle('menu-open', isActive);
-    document.documentElement.classList.toggle('no-scroll', isActive);
     document.body.classList.toggle('no-scroll', isActive);
   }
 
@@ -82,7 +85,6 @@ const Navigation = (() => {
     menuToggle.classList.remove('active');
     menuToggle.setAttribute('aria-expanded', 'false');
     if (navbar) navbar.classList.remove('menu-open');
-    document.documentElement.classList.remove('no-scroll');
     document.body.classList.remove('no-scroll');
   }
 

@@ -42,6 +42,7 @@
     transition: opacity var(--transition-base), visibility var(--transition-base);
     z-index: 5;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding: calc(var(--navbar-height) + var(--space-md)) var(--space-lg) var(--space-xl);
   }

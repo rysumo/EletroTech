@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const { supabase, isSupabaseConfigured } = require('../db/supabase');
 const { getDb, saveDb } = require('../db/database');
 const { authMiddleware } = require('../middleware/auth');
